@@ -2,6 +2,7 @@ import pygame
 import sys
 import numpy as np
 import os
+import copy
 import pickle
 from classes import *
 from test_model import test_main
@@ -35,7 +36,19 @@ def save_continue(continue_states, player, difficulty):
         # pickle.dump() 함수를 사용하여 객체를 저장합니다.
         pickle.dump(save_infos, file)
 
+def load_review():
+    if not os.path.isfile('files/review.pkl'):
+        return []
+    else:
+        with open('files/review.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
 
+def save_review(states, player, difficulty):
+    save_infos = [states,player, difficulty]
+    with open('files/review.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(save_infos, file)
 
 
 
@@ -272,7 +285,7 @@ def play(difficulty,cont_game=False):
         print(board)
 
     # 이어하기를 위한 보드 초기화
-    continue_boards = [board]
+    continue_boards = [copy.deepcopy(board)]
     run = True
     event = None
     x, y = 50,100
@@ -284,12 +297,15 @@ def play(difficulty,cont_game=False):
     while run:
         SCREEN.fill(WHITE)
         if is_win(board,2//player) != 0:
+            print("for review")
+            print(continue_boards)
+            save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player))
             return
         if player == 2:
             col = test_main(board, difficulty)
             board, player = get_next_state(board,col,player)
-            continue_boards.append(board)
+            continue_boards.append(copy.deepcopy(board))
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
@@ -299,7 +315,7 @@ def play(difficulty,cont_game=False):
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
                 board, player = get_next_state(board,col,player)
-                continue_boards.append(board)
+                continue_boards.append(copy.deepcopy(board))
                 print(board)
 
             x,y = pygame.mouse.get_pos()
@@ -365,8 +381,93 @@ def end(board, player):
 
 def how_to():
     pass
+
+def no_board_to_review():
+    w,h = SCREEN.get_size()
+
+    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("복기할 게임이 없습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    run = True
+    event = None
+    go_back = False
+    SCREEN.fill(WHITE)
+    while run:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
 def review():
-    pass
+    load_infos = load_review()
+    w,h = SCREEN.get_size()
+    idx = 0  # 배열 간 이동 
+    if load_infos:
+        review_boards, player, difficulty = load_infos
+    else:
+        print("no board to review")
+        no_board_to_review()
+        return
+    back_button = Button('<-')
+    previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
+    next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
+    
+    font = pygame.font.SysFont('malgungothic', 30)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    text_content = "{} / {}".format(idx, len(review_boards)-1)
+    text = font.render(text_content, True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    go_back, go_prev, go_next = False, False, False
+    SCREEN.fill(WHITE)
+    draw_table()
+    run = True
+    event = None
+    while run:
+        SCREEN.fill(WHITE)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        go_next = next_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        if go_prev:
+            idx = idx-1 if idx>=1 else idx
+            go_prev = False
+        if go_next:
+            idx = idx+1 if idx<len(review_boards)-1 else idx 
+            go_next = False
+        for i in range(len(review_boards[idx])):
+            for j in range(len(review_boards[idx][0])):
+                if review_boards[idx][i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=review_boards[idx][i][j])
+        draw_table()
+        text_content = "{} / {}".format(idx, len(review_boards)-1)
+        text = font.render(text_content, True, BLACK)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
+
 def option():
     pass
 # 이미지 로드
