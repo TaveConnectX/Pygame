@@ -162,16 +162,18 @@ def is_valid_x(x):
         return False
     else: return True
 
+
+# (board, column, player)를 받아서  (next board, next player, valid move) 를 리턴 
 def get_next_state(board, col,player):
     if col == -1: 
-        return board, player
+        return board, player, False
     if board[0][col] != 0:
-        return board, player
+        return board, player, False
     
     for row in range(5,-1,-1):
         if board[row][col] == 0:
             board[row][col] = player
-            return board, 2//player
+            return board, 2//player, True
 
 # made by chatgpt and I edit little bit.
 # 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
@@ -286,6 +288,7 @@ def play(difficulty,cont_game=False):
 
     # 이어하기를 위한 보드 초기화
     continue_boards = [copy.deepcopy(board)]
+    block_event = False
     run = True
     event = None
     x, y = 50,100
@@ -302,11 +305,16 @@ def play(difficulty,cont_game=False):
             save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player))
             return
+        
+        if block_event: block_event = False
         if player == 2:
+            block_event = True
             col = test_main(board, difficulty)
-            board, player = get_next_state(board,col,player)
-            continue_boards.append(copy.deepcopy(board))
+            board, player, is_valid = get_next_state(board,col,player)
+            if is_valid: continue_boards.append(copy.deepcopy(board))
+            
         for event in pygame.event.get():
+            if block_event: break
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
@@ -314,8 +322,8 @@ def play(difficulty,cont_game=False):
                 if not is_valid_x(clicked_x): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
-                board, player = get_next_state(board,col,player)
-                continue_boards.append(copy.deepcopy(board))
+                board, player, is_valid = get_next_state(board,col,player)
+                if is_valid: continue_boards.append(copy.deepcopy(board))
                 print(board)
 
             x,y = pygame.mouse.get_pos()
