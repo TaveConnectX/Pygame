@@ -120,7 +120,11 @@ def draw_circle_with_pos(pos,player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
     if player == 1: color = P1COLOR
-    else: color = P2COLOR
+    elif player == 2: color = P2COLOR
+    else:
+        R1, G1, B1 = P1COLOR
+        R2, G2, B2 = P2COLOR
+        color = (255-(R1+R2)//2, 255-(G1+G2)//2, 255-(B1+B2)//2)
     x,y = pos
     x += 0.5
     y += 0.5
@@ -284,7 +288,7 @@ def play(difficulty,cont_game=False):
     else:
         board = np.zeros((6,7))
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
-        print(board)
+        
 
     # 이어하기를 위한 보드 초기화
     continue_boards = [copy.deepcopy(board)]
@@ -301,7 +305,6 @@ def play(difficulty,cont_game=False):
         SCREEN.fill(WHITE)
         if is_win(board,2//player) != 0:
             print("for review")
-            print(continue_boards)
             save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player))
             return
@@ -324,7 +327,7 @@ def play(difficulty,cont_game=False):
                 col = x2col(x)
                 board, player, is_valid = get_next_state(board,col,player)
                 if is_valid: continue_boards.append(copy.deepcopy(board))
-                print(board)
+                # print(board)
 
             x,y = pygame.mouse.get_pos()
             
@@ -431,7 +434,7 @@ def review():
     back_button = Button('<-')
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    
+    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100,font='malgungothic')
     font = pygame.font.SysFont('malgungothic', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -440,7 +443,10 @@ def review():
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
-    go_back, go_prev, go_next = False, False, False
+    if len(review_boards)%2 == player%2: fp = 1
+    else: fp = 0
+    go_back, go_prev, go_next, show_recommend= False, False, False, False
+    cord_recommend = (None, None)
     SCREEN.fill(WHITE)
     draw_table()
     run = True
@@ -451,19 +457,41 @@ def review():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+            
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        go_prev = previous_button.draw_and_get_event(SCREEN, event)
-        go_next = next_button.draw_and_get_event(SCREEN, event)
+        if idx != 0:
+            go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        if idx != len(review_boards)-1:
+            go_next = next_button.draw_and_get_event(SCREEN, event)
+        if (idx+fp)%2 and idx!=len(review_boards)-1:
+            show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             SCREEN.fill(WHITE)
             return
         if go_prev:
             idx = idx-1 if idx>=1 else idx
             go_prev = False
+            cord_recommend = (None, None)
         if go_next:
             idx = idx+1 if idx<len(review_boards)-1 else idx 
             go_next = False
+            cord_recommend = (None, None)
+        if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
+            if cord_recommend == (None, None):
+                row = 0
+                # print(review_boards[idx])
+                col = test_main(review_boards[idx], 'hard')
+                for r in range(5,-1,-1):
+                    if review_boards[idx][r][col] == 0:
+                        row = r
+                        break
+                pos = cord2pos((row,col))
+                cord_recommend = pos
+        
+        if cord_recommend != (None, None):
+            draw_circle_with_pos(cord_recommend,player=3)
+
         for i in range(len(review_boards[idx])):
             for j in range(len(review_boards[idx][0])):
                 if review_boards[idx][i][j] != 0:

@@ -351,7 +351,7 @@ def test_main(state, difficulty):
 
     # 1p, 2p 확인
     player = check_player(state)
-
+    print(state)
     # env가 없으므로 valid action이 뭔지 따로 확인
     valid_actions = get_valid_actions(state)
     # print("valid_actions:",valid_actions)
