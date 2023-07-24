@@ -1,8 +1,11 @@
 import pygame
 import sys
 import numpy as np
+import os
+import pickle
 from classes import *
 from test_model import test_main
+
 pygame.init()
 
 
@@ -14,6 +17,25 @@ clock = pygame.time.Clock()
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
+# continue.pkl을 불러온다. 없다면 False 리턴 
+def load_continue():
+    if not os.path.isfile('files/continue.pkl'):
+        return []
+    else:
+        with open('files/continue.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
+
+# 뒤로 가기 등을 눌렀을 때 continue_states 배열을 저장
+def save_continue(continue_states, player, difficulty):
+    if continue_states:
+        save_infos = [continue_states,player, difficulty]
+    else: save_infos = []
+    with open('files/continue.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(save_infos, file)
+
+
 
 
 
@@ -24,6 +46,8 @@ def intro():
     intro_button_width = w//3
     intro_button_height = h//16
     print(w,h,intro_button_width,intro_button_height)
+
+
     intro_buttons = [
         Button('new game',cx=w/2,cy=h/2+intro_button_height*1,width=intro_button_width, height=intro_button_height),
         Button('continue',cx=w/2,cy=h/2+intro_button_height*2,width=intro_button_width, height=intro_button_height),
@@ -49,7 +73,7 @@ def intro():
                 if action:
                     print(button.name)
                     if button.name == 'new game': select_difficulty()
-                    elif button.name == 'continue': play(cont_game=True)
+                    elif button.name == 'continue': play(difficulty=None, cont_game=True)
                     elif button.name == 'how to': how_to()
                     elif button.name == 'review': review()
                     elif button.name == 'option': option()
@@ -201,20 +225,54 @@ def select_difficulty():
         clock.tick(60)
         pygame.display.flip()
 
+def no_board_to_continue():
+    w,h = SCREEN.get_size()
+
+    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("이어할 게임이 없습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    run = True
+    event = None
+    go_back = False
+    SCREEN.fill(WHITE)
+    while run:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
 def play(difficulty,cont_game=False):
     print('play')
     player = np.random.choice([1,2])
     back_button = Button('<-')
     go_back = False
     if cont_game:
-        '''
-        여기엔 이어할 보드를 불러오는 기능이 필요함
-        '''
-        board = np.zeros((6,7))
+        load_infos = load_continue()
+        if load_infos: 
+            boards, player, difficulty = load_infos
+            board = boards[-1]
+        else:
+            no_board_to_continue()
+            return
     else:
         board = np.zeros((6,7))
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
         print(board)
+
+    # 이어하기를 위한 보드 초기화
+    continue_boards = [board]
     run = True
     event = None
     x, y = 50,100
@@ -231,6 +289,7 @@ def play(difficulty,cont_game=False):
         if player == 2:
             col = test_main(board, difficulty)
             board, player = get_next_state(board,col,player)
+            continue_boards.append(board)
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
@@ -240,15 +299,19 @@ def play(difficulty,cont_game=False):
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
                 board, player = get_next_state(board,col,player)
+                continue_boards.append(board)
                 print(board)
 
             x,y = pygame.mouse.get_pos()
             
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
+                save_continue(continue_boards, player,difficulty)
                 run = False
+        
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back: 
+            save_continue(continue_boards, player,difficulty)
             SCREEN.fill(WHITE)
             return
         
@@ -262,6 +325,7 @@ def play(difficulty,cont_game=False):
         pygame.display.flip()
 
 def end(board, player):
+    save_continue([],None, None)
     w,h = SCREEN.get_size()
     if player == 1: text_content = "이겼습니다! 축하드립니다!"
     elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
