@@ -165,8 +165,8 @@ def select_difficulty():
     easy_button = Button('easy',cx=w/2,cy=h/2/2,width=w/3)
     normal_button = Button('normal',cx=w/2,cy=h/2,width=w/3)
     hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
-
-    action = False
+    back_button = Button('<-')
+    go_back = False
     # 선택하면 play()    
     run = True
     event = None
@@ -192,6 +192,11 @@ def select_difficulty():
             return
         elif hard_action:
             play(difficulty='hard')
+            return
+        
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
             return
         clock.tick(60)
         pygame.display.flip()
