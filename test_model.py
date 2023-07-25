@@ -84,6 +84,8 @@ def check_player(state):
         return 1
     elif one == two+1:
         return 2
+    elif two == one+1:
+        return 2
     else: raise stateError
 
 

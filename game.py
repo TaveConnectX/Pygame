@@ -443,7 +443,7 @@ def review():
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
-    if len(review_boards)%2 == player%2: fp = 1
+    if (len(review_boards)+player)%2: fp = 1
     else: fp = 0
     go_back, go_prev, go_next, show_recommend= False, False, False, False
     cord_recommend = (None, None)
@@ -481,6 +481,7 @@ def review():
             if cord_recommend == (None, None):
                 row = 0
                 # print(review_boards[idx])
+                if fp == 0: review_boards[idx]
                 col = test_main(review_boards[idx], 'hard')
                 for r in range(5,-1,-1):
                     if review_boards[idx][r][col] == 0:
