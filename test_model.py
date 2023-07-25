@@ -340,7 +340,7 @@ def get_alphago_action(model, value_model, state, vas):
 
 
 
-def test_main(state, difficulty):
+def test_main(state, player, difficulty):
     # model type 확인
 
     # model_name, config_name = get_model_info(difficulty=difficulty)
@@ -352,7 +352,8 @@ def test_main(state, difficulty):
     state = np.array(state)  # list to numpy array
 
     # 1p, 2p 확인
-    player = check_player(state)
+    # player를 인자로 받도록 변경 
+    # player = check_player(state)
     print(state)
     # env가 없으므로 valid action이 뭔지 따로 확인
     valid_actions = get_valid_actions(state)
@@ -417,6 +418,6 @@ if __name__ == "__main__":
     ]
 
 
-    # test_main의 인자는 state와 난이도로 이루어짐
+    # test_main의 인자는 state와 player, 난이도로 이루어짐
     # 난이도는 'easy', 'normal', 'hard'
     print(test_main(state, 'hard'))

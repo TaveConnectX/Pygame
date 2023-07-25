@@ -312,7 +312,7 @@ def play(difficulty,cont_game=False):
         if block_event: block_event = False
         if player == 2:
             block_event = True
-            col = test_main(board, difficulty)
+            col = test_main(board, player,difficulty)
             board, player, is_valid = get_next_state(board,col,player)
             if is_valid: continue_boards.append(copy.deepcopy(board))
             
@@ -480,9 +480,9 @@ def review():
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
             if cord_recommend == (None, None):
                 row = 0
-                # print(review_boards[idx])
-                if fp == 0: review_boards[idx]
-                col = test_main(review_boards[idx], 'hard')
+                player = (fp+1)%2+1
+                print(review_boards[idx], player)
+                col = test_main(review_boards[idx], player, 'hard')
                 for r in range(5,-1,-1):
                     if review_boards[idx][r][col] == 0:
                         row = r
