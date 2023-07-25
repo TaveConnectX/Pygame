@@ -46,6 +46,11 @@ class typeError(Exception):
     def __str__(self):
         return "impossible model type"
     
+# model의 이름이 적절하지 않으면 error를 출력
+class playerError(Exception):
+    def __str__(self):
+        return "impossible player"
+    
 # model test를 위한 board_normalization() 함수 수정 버전
 def board_normalization(state, model_type, player):
     # cnn을 사용하지 않는다면, 2차원 board를 1차원으로 바꿔줘야됨 
@@ -62,6 +67,9 @@ def board_normalization(state, model_type, player):
     
     # 2p이면 보드판을 반전시켜서 보이게 하여, 항상 같은 색깔을 보면서 학습 가능
     if player == 2: arr = -1 * arr
+    elif player == 1: pass
+    else: 
+        raise playerError
 
     arr = torch.from_numpy(arr).float()
 
@@ -411,13 +419,13 @@ if __name__ == "__main__":
     state = [
         [0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0],
-        [0,0,1,2,0,0,0]
+        [0,0,1,0,0,0,0],
+        [0,0,2,0,0,0,0],
+        [0,0,1,0,0,0,0],
+        [0,0,2,1,0,0,0]
     ]
 
 
     # test_main의 인자는 state와 player, 난이도로 이루어짐
     # 난이도는 'easy', 'normal', 'hard'
-    print(test_main(state, 'hard'))
+    print(test_main(state, 2, 'hard'))

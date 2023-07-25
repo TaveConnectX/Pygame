@@ -282,16 +282,18 @@ def play(difficulty,cont_game=False):
         if load_infos: 
             boards, player, difficulty = load_infos
             board = boards[-1]
+            # 이어하기를 위한 보드 초기화
+            continue_boards = copy.deepcopy(boards)
         else:
             no_board_to_continue()
             return
     else:
         board = np.zeros((6,7))
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
-        
+        # 이어하기를 위한 보드 초기화
+        continue_boards = [copy.deepcopy(board)]
 
-    # 이어하기를 위한 보드 초기화
-    continue_boards = [copy.deepcopy(board)]
+    
     block_event = False
     run = True
     event = None
@@ -480,9 +482,9 @@ def review():
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
             if cord_recommend == (None, None):
                 row = 0
-                player = (fp+1)%2+1
-                print(review_boards[idx], player)
-                col = test_main(review_boards[idx], player, 'hard')
+                
+                # ai 추천은 사람의 입장에서 진행 -> player=1
+                col = test_main(review_boards[idx], 1, 'hard')
                 for r in range(5,-1,-1):
                     if review_boards[idx][r][col] == 0:
                         row = r
