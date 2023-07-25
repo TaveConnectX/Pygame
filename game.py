@@ -1,8 +1,15 @@
 import pygame
 import sys
 import numpy as np
+import os
+import copy
+import pickle
 from classes import *
 from test_model import test_main
+
+# ver 0.2 
+
+
 pygame.init()
 
 
@@ -14,6 +21,37 @@ clock = pygame.time.Clock()
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
+# continue.pkl을 불러온다. 없다면 False 리턴 
+def load_continue():
+    if not os.path.isfile('files/continue.pkl'):
+        return []
+    else:
+        with open('files/continue.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
+
+# 뒤로 가기 등을 눌렀을 때 continue_states 배열을 저장
+def save_continue(continue_states, player, difficulty):
+    if continue_states:
+        save_infos = [continue_states,player, difficulty]
+    else: save_infos = []
+    with open('files/continue.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(save_infos, file)
+
+def load_review():
+    if not os.path.isfile('files/review.pkl'):
+        return []
+    else:
+        with open('files/review.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
+
+def save_review(states, player, difficulty):
+    save_infos = [states,player, difficulty]
+    with open('files/review.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(save_infos, file)
 
 
 
@@ -24,6 +62,8 @@ def intro():
     intro_button_width = w//3
     intro_button_height = h//16
     print(w,h,intro_button_width,intro_button_height)
+
+
     intro_buttons = [
         Button('new game',cx=w/2,cy=h/2+intro_button_height*1,width=intro_button_width, height=intro_button_height),
         Button('continue',cx=w/2,cy=h/2+intro_button_height*2,width=intro_button_width, height=intro_button_height),
@@ -39,23 +79,23 @@ def intro():
     logo_rect.y = h/4- logo_image.get_height()/2
     
     run = True
+    event = None
     SCREEN.fill((255,255,255))
     while run:
         SCREEN.blit(logo_image, logo_rect)
+        for button in intro_buttons:
+            action = button.draw_and_get_event(SCREEN,event)
+            if action:
+                print(button.name)
+                if button.name == 'new game': select_difficulty()
+                elif button.name == 'continue': play(difficulty=None, cont_game=True)
+                elif button.name == 'how to': how_to()
+                elif button.name == 'review': review()
+                elif button.name == 'option': option()
+                elif button.name == 'quit': run=False
+                else:
+                    print('error')
         for event in pygame.event.get():
-            
-            for button in intro_buttons:
-                action = button.draw_and_get_event(SCREEN,event)
-                if action:
-                    print(button.name)
-                    if button.name == 'new game': select_difficulty()
-                    elif button.name == 'continue': play(cont_game=True)
-                    elif button.name == 'how to': how_to()
-                    elif button.name == 'review': review()
-                    elif button.name == 'option': option()
-                    elif button.name == 'quit': run=False
-                    else:
-                        print('error')
             if event.type == pygame.QUIT:
                 run = False
         clock.tick(60)
@@ -83,7 +123,11 @@ def draw_circle_with_pos(pos,player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
     if player == 1: color = P1COLOR
-    else: color = P2COLOR
+    elif player == 2: color = P2COLOR
+    else:
+        R1, G1, B1 = P1COLOR
+        R2, G2, B2 = P2COLOR
+        color = (255-(R1+R2)//2, 255-(G1+G2)//2, 255-(B1+B2)//2)
     x,y = pos
     x += 0.5
     y += 0.5
@@ -125,16 +169,18 @@ def is_valid_x(x):
         return False
     else: return True
 
+
+# (board, column, player)를 받아서  (next board, next player, valid move) 를 리턴 
 def get_next_state(board, col,player):
     if col == -1: 
-        return board, player
+        return board, player, False
     if board[0][col] != 0:
-        return board, player
+        return board, player, False
     
     for row in range(5,-1,-1):
         if board[row][col] == 0:
             board[row][col] = player
-            return board, 2//player
+            return board, 2//player, True
 
 # made by chatgpt and I edit little bit.
 # 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
@@ -165,8 +211,8 @@ def select_difficulty():
     easy_button = Button('easy',cx=w/2,cy=h/2/2,width=w/3)
     normal_button = Button('normal',cx=w/2,cy=h/2,width=w/3)
     hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
-
-    action = False
+    back_button = Button('<-')
+    go_back = False
     # 선택하면 play()    
     run = True
     event = None
@@ -193,7 +239,40 @@ def select_difficulty():
         elif hard_action:
             play(difficulty='hard')
             return
+        
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
         clock.tick(60)
+        pygame.display.flip()
+
+def no_board_to_continue():
+    w,h = SCREEN.get_size()
+
+    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("이어할 게임이 없습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    run = True
+    event = None
+    go_back = False
+    SCREEN.fill(WHITE)
+    while run:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(text, text_rect)
         pygame.display.flip()
 
 def play(difficulty,cont_game=False):
@@ -202,14 +281,23 @@ def play(difficulty,cont_game=False):
     back_button = Button('<-')
     go_back = False
     if cont_game:
-        '''
-        여기엔 이어할 보드를 불러오는 기능이 필요함
-        '''
-        board = np.zeros((6,7))
+        load_infos = load_continue()
+        if load_infos: 
+            boards, player, difficulty = load_infos
+            board = boards[-1]
+            # 이어하기를 위한 보드 초기화
+            continue_boards = copy.deepcopy(boards)
+        else:
+            no_board_to_continue()
+            return
     else:
         board = np.zeros((6,7))
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
-        print(board)
+        # 이어하기를 위한 보드 초기화
+        continue_boards = [copy.deepcopy(board)]
+
+    
+    block_event = False
     run = True
     event = None
     x, y = 50,100
@@ -221,12 +309,20 @@ def play(difficulty,cont_game=False):
     while run:
         SCREEN.fill(WHITE)
         if is_win(board,2//player) != 0:
+            print("for review")
+            save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player))
             return
+        
+        if block_event: block_event = False
         if player == 2:
-            col = test_main(board, difficulty)
-            board, player = get_next_state(board,col,player)
+            block_event = True
+            col = test_main(board, player,difficulty)
+            board, player, is_valid = get_next_state(board,col,player)
+            if is_valid: continue_boards.append(copy.deepcopy(board))
+            
         for event in pygame.event.get():
+            if block_event: break
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
@@ -234,16 +330,20 @@ def play(difficulty,cont_game=False):
                 if not is_valid_x(clicked_x): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
-                board, player = get_next_state(board,col,player)
-                print(board)
+                board, player, is_valid = get_next_state(board,col,player)
+                if is_valid: continue_boards.append(copy.deepcopy(board))
+                # print(board)
 
             x,y = pygame.mouse.get_pos()
             
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
+                save_continue(continue_boards, player,difficulty)
                 run = False
+        
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back: 
+            save_continue(continue_boards, player,difficulty)
             SCREEN.fill(WHITE)
             return
         
@@ -257,6 +357,7 @@ def play(difficulty,cont_game=False):
         pygame.display.flip()
 
 def end(board, player):
+    save_continue([],None, None)
     w,h = SCREEN.get_size()
     if player == 1: text_content = "이겼습니다! 축하드립니다!"
     elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
@@ -296,8 +397,119 @@ def end(board, player):
 
 def how_to():
     pass
+
+def no_board_to_review():
+    w,h = SCREEN.get_size()
+
+    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("복기할 게임이 없습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    run = True
+    event = None
+    go_back = False
+    SCREEN.fill(WHITE)
+    while run:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
 def review():
-    pass
+    load_infos = load_review()
+    w,h = SCREEN.get_size()
+    idx = 0  # 배열 간 이동 
+    if load_infos:
+        review_boards, player, difficulty = load_infos
+    else:
+        print("no board to review")
+        no_board_to_review()
+        return
+    back_button = Button('<-')
+    previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
+    next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
+    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100,font='malgungothic')
+    font = pygame.font.SysFont('malgungothic', 30)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    text_content = "{} / {}".format(idx, len(review_boards)-1)
+    text = font.render(text_content, True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    if (len(review_boards)+player)%2: fp = 1
+    else: fp = 0
+    go_back, go_prev, go_next, show_recommend= False, False, False, False
+    cord_recommend = (None, None)
+    SCREEN.fill(WHITE)
+    draw_table()
+    run = True
+    event = None
+    while run:
+        SCREEN.fill(WHITE)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+            
+        
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if idx != 0:
+            go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        if idx != len(review_boards)-1:
+            go_next = next_button.draw_and_get_event(SCREEN, event)
+        if (idx+fp)%2 and idx!=len(review_boards)-1:
+            show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        if go_prev:
+            idx = idx-1 if idx>=1 else idx
+            go_prev = False
+            cord_recommend = (None, None)
+        if go_next:
+            idx = idx+1 if idx<len(review_boards)-1 else idx 
+            go_next = False
+            cord_recommend = (None, None)
+        if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
+            if cord_recommend == (None, None):
+                row = 0
+                
+                # ai 추천은 사람의 입장에서 진행 -> player=1
+                col = test_main(review_boards[idx], 1, 'hard')
+                for r in range(5,-1,-1):
+                    if review_boards[idx][r][col] == 0:
+                        row = r
+                        break
+                pos = cord2pos((row,col))
+                cord_recommend = pos
+        
+        if cord_recommend != (None, None):
+            draw_circle_with_pos(cord_recommend,player=3)
+
+        for i in range(len(review_boards[idx])):
+            for j in range(len(review_boards[idx][0])):
+                if review_boards[idx][i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=review_boards[idx][i][j])
+        draw_table()
+        text_content = "{} / {}".format(idx, len(review_boards)-1)
+        text = font.render(text_content, True, BLACK)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
+
 def option():
     pass
 # 이미지 로드
