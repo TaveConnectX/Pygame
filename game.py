@@ -7,6 +7,9 @@ import pickle
 from classes import *
 from test_model import test_main
 
+# ver 0.2 
+
+
 pygame.init()
 
 
