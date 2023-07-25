@@ -76,23 +76,23 @@ def intro():
     logo_rect.y = h/4- logo_image.get_height()/2
     
     run = True
+    event = None
     SCREEN.fill((255,255,255))
     while run:
         SCREEN.blit(logo_image, logo_rect)
+        for button in intro_buttons:
+            action = button.draw_and_get_event(SCREEN,event)
+            if action:
+                print(button.name)
+                if button.name == 'new game': select_difficulty()
+                elif button.name == 'continue': play(difficulty=None, cont_game=True)
+                elif button.name == 'how to': how_to()
+                elif button.name == 'review': review()
+                elif button.name == 'option': option()
+                elif button.name == 'quit': run=False
+                else:
+                    print('error')
         for event in pygame.event.get():
-            
-            for button in intro_buttons:
-                action = button.draw_and_get_event(SCREEN,event)
-                if action:
-                    print(button.name)
-                    if button.name == 'new game': select_difficulty()
-                    elif button.name == 'continue': play(difficulty=None, cont_game=True)
-                    elif button.name == 'how to': how_to()
-                    elif button.name == 'review': review()
-                    elif button.name == 'option': option()
-                    elif button.name == 'quit': run=False
-                    else:
-                        print('error')
             if event.type == pygame.QUIT:
                 run = False
         clock.tick(60)
