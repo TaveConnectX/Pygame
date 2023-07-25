@@ -17,7 +17,7 @@ P1COLOR = (255,0,0)
 P2COLOR = (255,255,0)
 
 class Button:
-    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font=None,font_size=30):
+    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font='malgungothic',font_size=30):
         self.name = name
         self.cx = cx
         self.cy = cy
