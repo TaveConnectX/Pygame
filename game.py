@@ -21,40 +21,27 @@ clock = pygame.time.Clock()
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
-
-# pos 가 중심인 원판이 v의 속도로 떨어질 때의 위치에너지 
-# E = mgh + mv^2 / 2
-
-def get_velocity(pos, base_pos):
-    g = 9.8
-    m = 1
-    x, y = pos
-    bx, by = base_pos
-    E = m*g*by
-    h = by - y 
-    v = (2*(E - m*g*h)/m)**(1/2)
-
-    return v 
-
+# 중력을 계산하기 위한 class
 class FallingInfo:
     def __init__(self):
-        self.pos = (None, None)
-        self.base_pos = (None,None)
-        self.target_pos = (None, None)
-        self.v = 0
-        self.g = 0.002
-        self.bounce = 0
+        self.pos = (None, None)  # 현재 돌의 좌표
+        self.base_pos = (None,None)  # 바닥 돌의 좌표
+        self.target_pos = (None, None)  # 도달해야 하는 좌표 
+        self.v = 0  # 속도
+        self.g = 0.002  # 중력가속도 
+        # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
+        self.bounce = 0  # 돌이 튀어오른 수
         
-
+    # target 좌표를 이용해서 변수들을 초기화 
     def set_pos(self, target_cord):
         self.bounce = 0
         self.v = 0
-        target_x, target_y = target_cord
-        self.target_pos = cord2pos((target_x,target_y))
-        self.base_pos = cord2pos((6,target_y))
-        self.pos = cord2pos((-1,target_y))
-
-        # self.E = self.m*self.g*abs(self.pos[1]-self.base_pos[1])
+        target_row, target_col = target_cord
+        self.target_pos = cord2pos((target_row,target_col))
+        # 바닥은 (5,col) 보다 낮은 (6,col)
+        # 떨어지기 시작하는 위치는 (0,col) 보다 높은 (-1, col) 로 설정 
+        self.base_pos = cord2pos((6,target_col))  
+        self.pos = cord2pos((-1,target_col))  
 
     def calculate_info(self):
         # print(self.bounce)
@@ -64,7 +51,7 @@ class FallingInfo:
         if self.target_pos[1] < self.pos[1] and self.v > 0: 
             self.v *= -1/2
             self.bounce += 1
-        if self.bounce >= 5: self.v = 0
+        if self.bounce >= 4: self.v = 0
     # 떨어지던 돌이 멈췄는지 확인 
     def stopped(self):
         if self.v==0: return True
@@ -301,7 +288,7 @@ def select_difficulty():
 def no_board_to_continue():
     w,h = SCREEN.get_size()
 
-    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
@@ -384,6 +371,7 @@ def play(difficulty,cont_game=False):
             if is_valid: continue_boards.append(copy.deepcopy(next_board))
             
         for event in pygame.event.get():
+            x,y = pygame.mouse.get_pos()
             if block_event: break
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
@@ -399,7 +387,7 @@ def play(difficulty,cont_game=False):
                 if is_valid: continue_boards.append(copy.deepcopy(next_board))
                 # print(board)
 
-            x,y = pygame.mouse.get_pos()
+            
             
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -421,7 +409,8 @@ def play(difficulty,cont_game=False):
                     pos = cord2pos((i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
         draw_table()
-        draw_cursor(x,player)
+        if player==1: draw_cursor(x,player)
+        elif player==2 and block_event: draw_cursor(x, 2//player)
         pygame.display.flip()
 
 def end(board, player):
@@ -431,7 +420,7 @@ def end(board, player):
     elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
     else: text_content = "비겼습니다! 한번 더하면 이길지도...?"
 
-    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
@@ -488,7 +477,7 @@ def how_to():
 def no_board_to_review():
     w,h = SCREEN.get_size()
 
-    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
