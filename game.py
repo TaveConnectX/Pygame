@@ -170,17 +170,17 @@ def is_valid_x(x):
     else: return True
 
 
-# (board, column, player)를 받아서  (next board, next player, valid move) 를 리턴 
+# (board, column, player)를 받아서  (next board, next player, pos, valid move) 를 리턴 
 def get_next_state(board, col,player):
     if col == -1: 
-        return board, player, False
+        return board, player, (None, None), False
     if board[0][col] != 0:
-        return board, player, False
+        return board, player, (None, None), False
     
     for row in range(5,-1,-1):
         if board[row][col] == 0:
             board[row][col] = player
-            return board, 2//player, True
+            return board, 2//player, (row, col), True
 
 # made by chatgpt and I edit little bit.
 # 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
@@ -275,6 +275,22 @@ def no_board_to_continue():
         SCREEN.blit(text, text_rect)
         pygame.display.flip()
 
+# pos 가 중심인 원판이 v의 속도로 떨어질 때의 위치에너지 
+# E = mgh + mv^2 / 2
+
+def get_velocity(pos, base_pos):
+    g = 9.8
+    m = 1
+    x, y = pos
+    bx, by = base_pos
+    E = m*g*by
+    h = by - y 
+    v = (2*(E - m*g*h)/m)**(1/2)
+
+    return v 
+
+
+
 def play(difficulty,cont_game=False):
     print('play')
     player = np.random.choice([1,2])
@@ -318,7 +334,7 @@ def play(difficulty,cont_game=False):
         if player == 2:
             block_event = True
             col = test_main(board, player,difficulty)
-            board, player, is_valid = get_next_state(board,col,player)
+            board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
             if is_valid: continue_boards.append(copy.deepcopy(board))
             
         for event in pygame.event.get():
@@ -330,7 +346,7 @@ def play(difficulty,cont_game=False):
                 if not is_valid_x(clicked_x): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
-                board, player, is_valid = get_next_state(board,col,player)
+                board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 if is_valid: continue_boards.append(copy.deepcopy(board))
                 # print(board)
 
