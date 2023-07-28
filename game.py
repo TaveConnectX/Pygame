@@ -21,6 +21,56 @@ clock = pygame.time.Clock()
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
+
+# pos 가 중심인 원판이 v의 속도로 떨어질 때의 위치에너지 
+# E = mgh + mv^2 / 2
+
+def get_velocity(pos, base_pos):
+    g = 9.8
+    m = 1
+    x, y = pos
+    bx, by = base_pos
+    E = m*g*by
+    h = by - y 
+    v = (2*(E - m*g*h)/m)**(1/2)
+
+    return v 
+
+class FallingInfo:
+    def __init__(self):
+        self.pos = (None, None)
+        self.base_pos = (None,None)
+        self.target_pos = (None, None)
+        self.v = 0
+        self.g = 0.002
+        self.bounce = 0
+        
+
+    def set_pos(self, target_cord):
+        self.bounce = 0
+        self.v = 0
+        target_x, target_y = target_cord
+        self.target_pos = cord2pos((target_x,target_y))
+        self.base_pos = cord2pos((6,target_y))
+        self.pos = cord2pos((-1,target_y))
+
+        # self.E = self.m*self.g*abs(self.pos[1]-self.base_pos[1])
+
+    def calculate_info(self):
+        # print(self.bounce)
+        self.v += self.g
+        self.pos[1] += self.v
+
+        if self.target_pos[1] < self.pos[1] and self.v > 0: 
+            self.v *= -1/2
+            self.bounce += 1
+        if self.bounce >= 5: self.v = 0
+    # 떨어지던 돌이 멈췄는지 확인 
+    def stopped(self):
+        if self.v==0: return True
+        else: return False
+
+
 # continue.pkl을 불러온다. 없다면 False 리턴 
 def load_continue():
     if not os.path.isfile('files/continue.pkl'):
@@ -177,10 +227,11 @@ def get_next_state(board, col,player):
     if board[0][col] != 0:
         return board, player, (None, None), False
     
+    next_board = copy.deepcopy(board)
     for row in range(5,-1,-1):
-        if board[row][col] == 0:
-            board[row][col] = player
-            return board, 2//player, (row, col), True
+        if next_board[row][col] == 0:
+            next_board[row][col] = player
+            return next_board, 2//player, (row, col), True
 
 # made by chatgpt and I edit little bit.
 # 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
@@ -211,7 +262,7 @@ def select_difficulty():
     easy_button = Button('easy',cx=w/2,cy=h/2/2,width=w/3)
     normal_button = Button('normal',cx=w/2,cy=h/2,width=w/3)
     hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
-    back_button = Button('<-')
+    back_button = Button('<')
     go_back = False
     # 선택하면 play()    
     run = True
@@ -250,7 +301,7 @@ def select_difficulty():
 def no_board_to_continue():
     w,h = SCREEN.get_size()
 
-    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
@@ -275,26 +326,14 @@ def no_board_to_continue():
         SCREEN.blit(text, text_rect)
         pygame.display.flip()
 
-# pos 가 중심인 원판이 v의 속도로 떨어질 때의 위치에너지 
-# E = mgh + mv^2 / 2
 
-def get_velocity(pos, base_pos):
-    g = 9.8
-    m = 1
-    x, y = pos
-    bx, by = base_pos
-    E = m*g*by
-    h = by - y 
-    v = (2*(E - m*g*h)/m)**(1/2)
-
-    return v 
 
 
 
 def play(difficulty,cont_game=False):
     print('play')
     player = np.random.choice([1,2])
-    back_button = Button('<-')
+    back_button = Button('<')
     go_back = False
     if cont_game:
         load_infos = load_continue()
@@ -318,24 +357,31 @@ def play(difficulty,cont_game=False):
     event = None
     x, y = 50,100
     clicked_x, clicked_y = 0,0
+    falling_piece = FallingInfo()
     SCREEN.fill(WHITE)
     draw_table()
     draw_cursor(x,player)
     pygame.display.flip()
+    next_board = copy.deepcopy(board)
     while run:
         SCREEN.fill(WHITE)
+        if falling_piece.stopped(): 
+            if block_event: block_event = False
+            board = next_board
         if is_win(board,2//player) != 0:
             print("for review")
             save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player))
             return
         
-        if block_event: block_event = False
-        if player == 2:
+        
+        if player == 2 and not block_event:
             block_event = True
             col = test_main(board, player,difficulty)
-            board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
-            if is_valid: continue_boards.append(copy.deepcopy(board))
+            next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+            falling_piece.set_pos((drop_row,drop_col))
+            falling_piece.calculate_info()
+            if is_valid: continue_boards.append(copy.deepcopy(next_board))
             
         for event in pygame.event.get():
             if block_event: break
@@ -346,8 +392,11 @@ def play(difficulty,cont_game=False):
                 if not is_valid_x(clicked_x): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(x)
-                board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
-                if is_valid: continue_boards.append(copy.deepcopy(board))
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                block_event = True
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+                if is_valid: continue_boards.append(copy.deepcopy(next_board))
                 # print(board)
 
             x,y = pygame.mouse.get_pos()
@@ -363,6 +412,9 @@ def play(difficulty,cont_game=False):
             SCREEN.fill(WHITE)
             return
         
+        if not falling_piece.stopped():
+            falling_piece.calculate_info()
+            draw_circle_with_pos(falling_piece.pos, player=2//player)
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
@@ -379,7 +431,7 @@ def end(board, player):
     elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
     else: text_content = "비겼습니다! 한번 더하면 이길지도...?"
 
-    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
@@ -436,7 +488,7 @@ def how_to():
 def no_board_to_review():
     w,h = SCREEN.get_size()
 
-    back_button = Button('<-',cx=w/2,cy=h*3/4,width=w/3,height=100)
+    back_button = Button('<',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.SysFont('malgungothic', 30)
@@ -471,7 +523,7 @@ def review():
         print("no board to review")
         no_board_to_review()
         return
-    back_button = Button('<-')
+    back_button = Button('<')
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100,font='malgungothic')
