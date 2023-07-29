@@ -28,7 +28,7 @@ class FallingInfo:
         self.base_pos = (None,None)  # 바닥 돌의 좌표
         self.target_pos = (None, None)  # 도달해야 하는 좌표 
         self.v = 0  # 속도
-        self.g = 0.7  # 중력가속도 
+        self.g = 0.8  # 중력가속도 
         # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
         self.bounce = 0  # 돌이 튀어오른 수
         
@@ -54,7 +54,8 @@ class FallingInfo:
         if self.bounce >= 5: 
             self.v = 0
             self.pos = self.target_pos
-        print(self.v)
+        # print(self.v)
+        
     # 떨어지던 돌이 멈췄는지 확인 
     def stopped(self):
         if self.pos==(None,None) or self.bounce==5: return True
@@ -481,14 +482,27 @@ def how_to():
     cnt_frame = 0
     go_back, go_prev, go_next= False, False, False
     event = None
+    block_event = False
     x, y = 50,100
+    player = 1
     falling_piece = FallingInfo()
     draw_table()
     pygame.display.flip()
     page = 1  # how-to 에 사용될 페이지 
     run = True
+    board = np.zeros((6,7))
+    next_board = copy.deepcopy(board)
     while run:
         SCREEN.fill(WHITE)
+        if falling_piece.stopped(): 
+            if block_event: block_event = False
+            board = next_board
+            if board[5][2]==2 and board[5][3]==1:
+                board = np.zeros((6,7))
+                player = 1
+            if board[4][2]==1:
+                board[4][2]=0
+                player=1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -499,26 +513,63 @@ def how_to():
                 idx = idx+1 if idx<max_idx else 0
             board = boards_page_1[idx]
         elif page==2:
-            pass
+            if player==1 and not block_event:
+                block_event = True
+                col = 3
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+            elif player==2 and not block_event:
+                block_event = True
+                col = 2
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
         elif page==3:
-            pass
+            if not block_event:
+                block_event = True
+                col = 2
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+    
         else: break 
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if page != 1:
             go_prev = previous_button.draw_and_get_event(SCREEN, event)
+            
         if page != 3:
             go_next = next_button.draw_and_get_event(SCREEN, event)
+            
         if go_back: 
             SCREEN.fill(WHITE)
             return
         if go_prev:
             page = page-1 if page>=1 else page
             go_prev = False
+            idx = 0
+            falling_piece = FallingInfo()
+            board, next_board = np.zeros((6,7)), np.zeros((6,7))
         if go_next:
             page = page+1 if page < 3 else page
             go_next = False
+            idx = 0
+            falling_piece = FallingInfo()
+            board, next_board = np.zeros((6,7)), np.zeros((6,7))
+            if page==3:
+                player=1
+                next_board = np.array([
+                    [0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0],
+                    [0,0,0,2,1,0,0],
+                    [0,0,0,1,1,0,0],
+                    [0,2,0,1,2,0,0],
+                    [0,1,2,2,2,1,0]
+                ])
 
-
+        if not falling_piece.stopped():
+            falling_piece.calculate_info()
+            draw_circle_with_pos(falling_piece.pos, player=2//player)
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
