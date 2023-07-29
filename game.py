@@ -28,7 +28,7 @@ class FallingInfo:
         self.base_pos = (None,None)  # 바닥 돌의 좌표
         self.target_pos = (None, None)  # 도달해야 하는 좌표 
         self.v = 0  # 속도
-        self.g = 0.002  # 중력가속도 
+        self.g = 0.7  # 중력가속도 
         # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
         self.bounce = 0  # 돌이 튀어오른 수
         
@@ -44,17 +44,20 @@ class FallingInfo:
         self.pos = cord2pos((-1,target_col))  
 
     def calculate_info(self):
-        # print(self.bounce)
         self.v += self.g
         self.pos[1] += self.v
 
         if self.target_pos[1] < self.pos[1] and self.v > 0: 
             self.v *= -1/2
             self.bounce += 1
-        if self.bounce >= 4: self.v = 0
+            self.pos[1] = self.target_pos[1]
+        if self.bounce >= 5: 
+            self.v = 0
+            self.pos = self.target_pos
+        print(self.v)
     # 떨어지던 돌이 멈췄는지 확인 
     def stopped(self):
-        if self.v==0: return True
+        if self.pos==(None,None) or self.bounce==5: return True
         else: return False
 
 
@@ -410,6 +413,7 @@ def play(difficulty,cont_game=False):
         draw_table()
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
+        clock.tick(frame)
         pygame.display.flip()
 
 def end(board, player):
