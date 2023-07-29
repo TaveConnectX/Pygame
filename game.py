@@ -17,7 +17,7 @@ SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Clock 객체 생성
 clock = pygame.time.Clock()
-
+frame = 60
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
@@ -135,7 +135,7 @@ def intro():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-        clock.tick(60)
+        clock.tick(frame)
         pygame.display.flip()
 
 
@@ -282,7 +282,6 @@ def select_difficulty():
         if go_back: 
             SCREEN.fill(WHITE)
             return
-        clock.tick(60)
         pygame.display.flip()
 
 def no_board_to_continue():
@@ -467,7 +466,64 @@ def how_to():
     2. 돌이 아래로 떨어지는 동작
     3. 4목을 만들 때 4목을 가리키는 동작
     '''
-    pass 
+    print('how to')
+    w,h = SCREEN.get_size()
+    back_button = Button('<')
+    previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
+    next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
+    with open('files/how_to_page_1.pkl', 'rb') as file:
+        boards_page_1 = pickle.load(file)
+    idx, max_idx = 0, len(boards_page_1)-1
+    cnt_frame = 0
+    go_back, go_prev, go_next= False, False, False
+    event = None
+    x, y = 50,100
+    falling_piece = FallingInfo()
+    draw_table()
+    pygame.display.flip()
+    page = 1  # how-to 에 사용될 페이지 
+    run = True
+    while run:
+        SCREEN.fill(WHITE)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if page==1:
+            cnt_frame = cnt_frame+1 if cnt_frame<frame//2 else 0
+            if cnt_frame == frame//2:
+                idx = idx+1 if idx<max_idx else 0
+            board = boards_page_1[idx]
+        elif page==2:
+            pass
+        elif page==3:
+            pass
+        else: break 
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if page != 1:
+            go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        if page != 3:
+            go_next = next_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        if go_prev:
+            page = page-1 if page>=1 else page
+            go_prev = False
+        if go_next:
+            page = page+1 if page < 3 else page
+            go_next = False
+
+
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=board[i][j])
+        draw_table()
+        clock.tick(frame)
+        pygame.display.flip()
+            
 
 
 
