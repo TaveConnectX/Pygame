@@ -17,7 +17,7 @@ SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Clock 객체 생성
 clock = pygame.time.Clock()
-
+frame = 60
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
@@ -28,7 +28,7 @@ class FallingInfo:
         self.base_pos = (None,None)  # 바닥 돌의 좌표
         self.target_pos = (None, None)  # 도달해야 하는 좌표 
         self.v = 0  # 속도
-        self.g = 0.002  # 중력가속도 
+        self.g = 0.8  # 중력가속도 
         # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
         self.bounce = 0  # 돌이 튀어오른 수
         
@@ -44,17 +44,21 @@ class FallingInfo:
         self.pos = cord2pos((-1,target_col))  
 
     def calculate_info(self):
-        # print(self.bounce)
         self.v += self.g
         self.pos[1] += self.v
 
         if self.target_pos[1] < self.pos[1] and self.v > 0: 
             self.v *= -1/2
             self.bounce += 1
-        if self.bounce >= 4: self.v = 0
+            self.pos[1] = self.target_pos[1]
+        if self.bounce >= 5: 
+            self.v = 0
+            self.pos = self.target_pos
+        # print(self.v)
+        
     # 떨어지던 돌이 멈췄는지 확인 
     def stopped(self):
-        if self.v==0: return True
+        if self.pos==(None,None) or self.bounce==5: return True
         else: return False
 
 
@@ -135,7 +139,7 @@ def intro():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-        clock.tick(60)
+        clock.tick(frame)
         pygame.display.flip()
 
 
@@ -282,7 +286,6 @@ def select_difficulty():
         if go_back: 
             SCREEN.fill(WHITE)
             return
-        clock.tick(60)
         pygame.display.flip()
 
 def no_board_to_continue():
@@ -411,6 +414,7 @@ def play(difficulty,cont_game=False):
         draw_table()
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
+        clock.tick(frame)
         pygame.display.flip()
 
 def end(board, player):
@@ -467,7 +471,131 @@ def how_to():
     2. 돌이 아래로 떨어지는 동작
     3. 4목을 만들 때 4목을 가리키는 동작
     '''
-    pass 
+    print('how to')
+    w,h = SCREEN.get_size()
+    back_button = Button('<')
+    previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
+    next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
+    with open('files/how_to_page_1.pkl', 'rb') as file:
+        boards_page_1 = pickle.load(file)
+    idx, max_idx = 0, len(boards_page_1)-1
+    cnt_frame = 0
+    go_back, go_prev, go_next= False, False, False
+    event = None
+    block_event = False
+    x, y = 50,100
+    player = 1
+    falling_piece = FallingInfo()
+    draw_table()
+    pygame.display.flip()
+    page = 1  # how-to 에 사용될 페이지 
+    run = True
+    board = np.zeros((6,7))
+    next_board = copy.deepcopy(board)
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    while run:
+        SCREEN.fill(WHITE)
+        if falling_piece.stopped(): 
+            if block_event: block_event = False
+            board = next_board
+            if board[5][2]==2 and board[5][3]==1:
+                board = np.zeros((6,7))
+                player = 1
+            if board[4][2]==1:
+                board[4][2]=0
+                player=1
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if page==1:
+            text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
+            cnt_frame = cnt_frame+1 if cnt_frame<frame//2 else 0
+            if cnt_frame == frame//2:
+                idx = idx+1 if idx<max_idx else 0
+            board = boards_page_1[idx]
+        elif page==2:
+            text = font.render("돌은 위에서 아래로 떨어집니다", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
+            if player==1 and not block_event:
+                block_event = True
+                col = 3
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+            elif player==2 and not block_event:
+                block_event = True
+                col = 2
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+        elif page==3:
+            text = font.render("4목을 완성하면 승리!", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
+
+            if not block_event:
+                block_event = True
+                col = 2
+                next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
+    
+        else: break 
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if page != 1:
+            go_prev = previous_button.draw_and_get_event(SCREEN, event)
+            
+        if page != 3:
+            go_next = next_button.draw_and_get_event(SCREEN, event)
+            
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        if go_prev:
+            page = page-1 if page>=1 else page
+            go_prev = False
+            idx = 0
+            falling_piece = FallingInfo()
+            board, next_board = np.zeros((6,7)), np.zeros((6,7))
+        if go_next:
+            page = page+1 if page < 3 else page
+            go_next = False
+            idx = 0
+            falling_piece = FallingInfo()
+            board, next_board = np.zeros((6,7)), np.zeros((6,7))
+            if page==3:
+                player=1
+                next_board = np.array([
+                    [0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0],
+                    [0,0,0,2,1,0,0],
+                    [0,0,0,1,1,0,0],
+                    [0,2,0,1,2,0,0],
+                    [0,1,2,2,2,1,0]
+                ])
+
+        if not falling_piece.stopped():
+            falling_piece.calculate_info()
+            draw_circle_with_pos(falling_piece.pos, player=2//player)
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=board[i][j])
+        draw_table()
+        clock.tick(frame)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+            
 
 
 
