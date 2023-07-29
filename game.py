@@ -492,6 +492,12 @@ def how_to():
     run = True
     board = np.zeros((6,7))
     next_board = copy.deepcopy(board)
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.SysFont('malgungothic', 30)
+    text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
     while run:
         SCREEN.fill(WHITE)
         if falling_piece.stopped(): 
@@ -508,11 +514,17 @@ def how_to():
                 SCREEN.fill(WHITE)
                 run = False
         if page==1:
+            text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
             cnt_frame = cnt_frame+1 if cnt_frame<frame//2 else 0
             if cnt_frame == frame//2:
                 idx = idx+1 if idx<max_idx else 0
             board = boards_page_1[idx]
         elif page==2:
+            text = font.render("돌은 위에서 아래로 떨어집니다", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
             if player==1 and not block_event:
                 block_event = True
                 col = 3
@@ -526,6 +538,10 @@ def how_to():
                 falling_piece.set_pos((drop_row,drop_col))
                 falling_piece.calculate_info()
         elif page==3:
+            text = font.render("4목을 완성하면 승리!", True, BLACK)
+            text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+            text_rect.center = border.center
+
             if not block_event:
                 block_event = True
                 col = 2
@@ -577,6 +593,7 @@ def how_to():
                     draw_circle_with_pos(pos, player=board[i][j])
         draw_table()
         clock.tick(frame)
+        SCREEN.blit(text, text_rect)
         pygame.display.flip()
             
 
