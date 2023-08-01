@@ -7,16 +7,15 @@ import pickle
 from classes import *
 from test_model import test_main
 
-# ver 0.2 
+
 
 
 pygame.init()
 
 
 
-
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
+ver = 0.5
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
@@ -144,13 +143,13 @@ def intro():
 
     background_sound.play(-1)
     music_on = True
-
+    setting_button = Button("",w-55,h-55, 70,70)
     intro_buttons = [
         Button('new game',cx=w/2,cy=h/2+intro_button_height*1,width=intro_button_width, height=intro_button_height),
         Button('continue',cx=w/2,cy=h/2+intro_button_height*2,width=intro_button_width, height=intro_button_height),
         Button('how to',cx=w/2,cy=h/2+intro_button_height*3,width=intro_button_width, height=intro_button_height),
         Button('review',cx=w/2,cy=h/2+intro_button_height*4,width=intro_button_width, height=intro_button_height),
-        Button('option',cx=w/2,cy=h/2+intro_button_height*5,width=intro_button_width, height=intro_button_height),
+        Button('info',cx=w/2,cy=h/2+intro_button_height*5,width=intro_button_width, height=intro_button_height),
         Button('quit',cx=w/2,cy=h/2+intro_button_height*6,width=intro_button_width, height=intro_button_height)
     ]
     logo_image = pygame.image.load('image/logo.png')
@@ -158,6 +157,16 @@ def intro():
     logo_rect = logo_image.get_rect()
     logo_rect.x = w/2- logo_image.get_width()/2
     logo_rect.y = h/4- logo_image.get_height()/2
+
+    # from https://www.pngwing.com/en/free-png-ddmrj
+    setting_image = pygame.image.load('image/setting_icon.png')
+    setting_image = pygame.transform.scale(setting_image, (70, 70))
+    setting_rect = setting_image.get_rect()
+    setting_rect.x = w-90
+    setting_rect.y = h-90
+    
+
+
     
     run = True
     event = None
@@ -168,6 +177,8 @@ def intro():
             background_sound.set_volume(0.3)
             music_on = True
         SCREEN.blit(logo_image, logo_rect)
+        setting_action = setting_button.draw_and_get_event(SCREEN,event)
+        SCREEN.blit(setting_image, setting_rect)
         for button in intro_buttons:
             action = button.draw_and_get_event(SCREEN,event)
             if action:
@@ -178,10 +189,12 @@ def intro():
                 elif button.name == 'continue': play(difficulty=None, cont_game=True)
                 elif button.name == 'how to': how_to()
                 elif button.name == 'review': review()
-                elif button.name == 'option': option()
+                elif button.name == 'info': info()
                 elif button.name == 'quit': run=False
                 else:
                     print('error')
+        
+        if setting_action: setting()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -191,6 +204,37 @@ def intro():
 
     pygame.quit()
     sys.exit()
+
+
+def no_setting():
+    w,h = SCREEN.get_size()
+
+    back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
+
+    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    font = pygame.font.Font('files/main_font.ttf', 30)
+    text = font.render("아직 구현이 안됐습니다ㅠ", True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+    run = True
+    event = None
+    go_back = False
+    SCREEN.fill(WHITE)
+    while run:
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(text, text_rect)
+        pygame.display.flip()
+
+
 
 def draw_table():
     w,h = SCREEN.get_size()
@@ -301,7 +345,7 @@ def select_difficulty():
     easy_button = Button('easy',cx=w/2,cy=h/2/2,width=w/3)
     normal_button = Button('normal',cx=w/2,cy=h/2,width=w/3)
     hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
-    back_button = Button('<')
+    back_button = Button('<',25,25,50,50)
     go_back = False
     # 선택하면 play()    
     run = True
@@ -342,7 +386,7 @@ def no_board_to_continue():
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.SysFont('malgungothic', 30)
+    font = pygame.font.Font('files/main_font.ttf', 30)
     text = font.render("이어할 게임이 없습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -371,7 +415,7 @@ def no_board_to_continue():
 def play(difficulty,cont_game=False):
     print('play')
     player = np.random.choice([1,2])
-    back_button = Button('<')
+    back_button = Button('<',25,25,50,50)
     go_back = False
     if cont_game:
         load_infos = load_continue()
@@ -497,7 +541,7 @@ def end(board, player, difficulty):
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.SysFont('malgungothic', 30)
+    font = pygame.font.Font('files/main_font.ttf', 30)
     text = font.render(text_content, True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -543,7 +587,7 @@ def how_to():
     '''
     print('how to')
     w,h = SCREEN.get_size()
-    back_button = Button('<')
+    back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     with open('files/how_to_page_1.pkl', 'rb') as file:
@@ -563,7 +607,7 @@ def how_to():
     board = np.zeros((6,7))
     next_board = copy.deepcopy(board)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.SysFont('malgungothic', 30)
+    font = pygame.font.Font('files/main_font.ttf', 30)
     text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -678,7 +722,7 @@ def no_board_to_review():
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.SysFont('malgungothic', 30)
+    font = pygame.font.Font('files/main_font.ttf', 30)
     text = font.render("복기할 게임이 없습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -710,11 +754,11 @@ def review():
         print("no board to review")
         no_board_to_review()
         return
-    back_button = Button('<')
+    back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100,font='malgungothic')
-    font = pygame.font.SysFont('malgungothic', 30)
+    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    font = pygame.font.Font('files/main_font.ttf', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     text_content = "{} / {}".format(idx, len(review_boards)-1)
@@ -785,8 +829,79 @@ def review():
         pygame.display.flip()
 
 
-def option():
-    pass
+def info():
+    record = load_record()
+    w, h = SCREEN.get_size()
+    # 버튼 3개 만들고
+    easy_button = Button('easy',cx=w/2,cy=h/2/2,width=w/3)
+    normal_button = Button('normal',cx=w/2,cy=h/2,width=w/3)
+    hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
+
+
+    font = pygame.font.Font('files/main_font.ttf', 30)
+
+    easy_text_content = "  EASY  {} / {} / {}".format(record['easy'][0],record['easy'][1],record['easy'][2])
+    easy_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/2/2,w/3,100))
+    
+    easy_text = font.render(easy_text_content, True, BLACK)
+    easy_text_rect = easy_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    easy_text_rect.center = easy_border.center
+
+    normal_text_content = "NORMAL  {} / {} / {}".format(record['normal'][0],record['normal'][1],record['normal'][2])
+    normal_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/2,w/3,100))
+    
+    normal_text = font.render(normal_text_content, True, BLACK)
+    normal_text_rect = normal_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    normal_text_rect.center = normal_border.center
+
+    hard_text_content = "  HARD  {} / {} / {}".format(record['hard'][0],record['hard'][1],record['hard'][2])
+    hard_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/4*3,w/3,100))
+    
+    hard_text = font.render(hard_text_content, True, BLACK)
+    hard_text_rect = hard_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    hard_text_rect.center = hard_border.center
+
+
+    font = pygame.font.Font('files/main_font.ttf', 20)
+    ver_text_content = "ver {}".format(ver)
+    ver_border = pygame.draw.rect(SCREEN, WHITE, (w-100,h-50,w,h))
+    
+    ver_text = font.render(ver_text_content, True, BLACK)
+    ver_text_rect = ver_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    ver_text_rect.center = ver_border.center
+
+
+    back_button = Button('<',25,25,50,50)
+    go_back = False
+    # 선택하면 play()    
+    run = True
+    event = None
+    SCREEN.fill((255,255,255))
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+        
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if go_back: 
+            SCREEN.fill(WHITE)
+            return
+        SCREEN.blit(easy_text, easy_text_rect)
+        SCREEN.blit(normal_text, normal_text_rect)
+        SCREEN.blit(hard_text, hard_text_rect)
+        SCREEN.blit(ver_text, ver_text_rect)
+        pygame.display.flip()
+
+    
+
+# 아직 setting 구현 x 
+def setting():
+    no_setting()
+    return
+
+
+
+
 # 이미지 로드
 # pygame.image.load(image_file)
 # pygame.transform.scale(image object, (width, height)) 
