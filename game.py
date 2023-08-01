@@ -11,8 +11,18 @@ from test_model import test_main
 
 
 pygame.init()
+
+
 pygame.mixer.init()
+# from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
 drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
+# from https://pixabay.com/sound-effects/search/level/
+win_sound = pygame.mixer.Sound('files/win_sound.mp3')
+win_sound.set_volume(0.5)
+draw_sound = pygame.mixer.Sound('files/draw_sound.wav')
+# from https://pixabay.com/sound-effects/search/game-over/ 
+fail_sound = pygame.mixer.Sound('files/fail_sound.mp3')
+
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Clock 객체 생성
@@ -252,7 +262,9 @@ def is_win(board, player):
                     return player
                 
 
-    if 0 not in board[0,:]: player = 3
+    if 0 not in board[0,:]: 
+        player = 3
+        return player
     return 0
 
 def select_difficulty():
@@ -377,9 +389,10 @@ def play(difficulty,cont_game=False):
             block_event = True
             col = test_main(board, player,difficulty)
             next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
-            falling_piece.set_pos((drop_row,drop_col))
-            falling_piece.calculate_info()
-            if is_valid: continue_boards.append(copy.deepcopy(next_board))
+            if is_valid: 
+                continue_boards.append(copy.deepcopy(next_board))
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
             
         for event in pygame.event.get():
             x,y = pygame.mouse.get_pos()
@@ -393,9 +406,10 @@ def play(difficulty,cont_game=False):
                 col = x2col(x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 block_event = True
-                falling_piece.set_pos((drop_row,drop_col))
-                falling_piece.calculate_info()
-                if is_valid: continue_boards.append(copy.deepcopy(next_board))
+                if is_valid: 
+                    continue_boards.append(copy.deepcopy(next_board))
+                    falling_piece.set_pos((drop_row,drop_col))
+                    falling_piece.calculate_info()
                 # print(board)
 
             
@@ -428,8 +442,12 @@ def play(difficulty,cont_game=False):
 def end(board, player):
     save_continue([],None, None)
     w,h = SCREEN.get_size()
-    if player == 1: text_content = "이겼습니다! 축하드립니다!"
-    elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
+    if player == 1: 
+        text_content = "이겼습니다! 축하드립니다!"
+        win_sound.play()
+    elif player == 2: 
+        text_content = "아쉽게도 졌네요 ㅠㅠ"
+        fail_sound.play()
     else: text_content = "비겼습니다! 한번 더하면 이길지도...?"
 
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
