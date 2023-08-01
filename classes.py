@@ -45,17 +45,19 @@ fail_sound.set_volume(0.7)
 button_sound = pygame.mixer.Sound('files/button_sound_edit.mp3')
 button_sound.set_volume(0.3)
 
+
+
 class Button:
-    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font='malgungothic',font_size=30):
+    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font_size=30):
         self.name = name
         self.cx = cx
         self.cy = cy
         self.width = width
         self.height = height
         self.color = color
-        self.font = pygame.font.SysFont(font, font_size, bold=False, italic=False)
         self.clicked = False
         self.clicked_color = LIGHTGRAY
+        self.font = pygame.font.Font('files/main_font.ttf', font_size)
 
     def draw_and_get_event(self, surface, event):
         x = self.cx-self.width/2
