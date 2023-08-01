@@ -152,14 +152,14 @@ def intro():
         Button('info',cx=w/2,cy=h/2+intro_button_height*5,width=intro_button_width, height=intro_button_height),
         Button('quit',cx=w/2,cy=h/2+intro_button_height*6,width=intro_button_width, height=intro_button_height)
     ]
-    logo_image = pygame.image.load('image/logo.png')
+    logo_image = pygame.image.load('files/image/logo.png')
     logo_image = pygame.transform.scale(logo_image, (w/1.1, w/1.1/4))
     logo_rect = logo_image.get_rect()
     logo_rect.x = w/2- logo_image.get_width()/2
     logo_rect.y = h/4- logo_image.get_height()/2
 
     # from https://www.pngwing.com/en/free-png-ddmrj
-    setting_image = pygame.image.load('image/setting_icon.png')
+    setting_image = pygame.image.load('files/image/setting_icon.png')
     setting_image = pygame.transform.scale(setting_image, (70, 70))
     setting_rect = setting_image.get_rect()
     setting_rect.x = w-90
@@ -212,7 +212,7 @@ def no_setting():
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render("아직 구현이 안됐습니다ㅠ", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -386,7 +386,7 @@ def no_board_to_continue():
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render("이어할 게임이 없습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -541,7 +541,7 @@ def end(board, player, difficulty):
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render(text_content, True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -607,7 +607,7 @@ def how_to():
     board = np.zeros((6,7))
     next_board = copy.deepcopy(board)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -722,7 +722,7 @@ def no_board_to_review():
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render("복기할 게임이 없습니다", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
@@ -758,7 +758,7 @@ def review():
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     text_content = "{} / {}".format(idx, len(review_boards)-1)
@@ -838,7 +838,7 @@ def info():
     hard_button = Button('hard',cx=w/2,cy=h/4*3,width=w/3)
 
 
-    font = pygame.font.Font('files/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/main_font.ttf', 30)
 
     easy_text_content = "  EASY  {} / {} / {}".format(record['easy'][0],record['easy'][1],record['easy'][2])
     easy_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/2/2,w/3,100))
@@ -862,7 +862,7 @@ def info():
     hard_text_rect.center = hard_border.center
 
 
-    font = pygame.font.Font('files/main_font.ttf', 20)
+    font = pygame.font.Font('files/font/main_font.ttf', 20)
     ver_text_content = "ver {}".format(ver)
     ver_border = pygame.draw.rect(SCREEN, WHITE, (w-100,h-50,w,h))
     

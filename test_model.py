@@ -148,7 +148,7 @@ def check_model_type(model_name):
 #     return model_name, config_name
 
 def load_model(difficulty):
-    path = 'model/'+difficulty+'/'
+    path = 'files/model/'+difficulty+'/'
     file_names = os.listdir(path)
 
     model = model_class[difficulty]
