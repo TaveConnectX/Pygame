@@ -13,6 +13,29 @@ from test_model import test_main
 pygame.init()
 
 
+pygame.mixer.init()
+# from https://pixabay.com/ko/music/search/genre/%EB%B9%84%EB%94%94%EC%98%A4%20%EA%B2%8C%EC%9E%84/
+background_sound = pygame.mixer.Sound('files/bgm_edit.mp3')
+background_sound.set_volume(0.3)
+
+# from https://pixabay.com/ko/sound-effects/search/arcade/
+game_sound = pygame.mixer.Sound('files/game_sound.mp3')
+
+# from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
+drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
+
+# from https://pixabay.com/ko/sound-effects/search/game%20success/
+recommend_sound = pygame.mixer.Sound('files/recommend_sound_2_edit.wav')
+recommend_sound.set_volume(0.7)
+
+# from https://pixabay.com/sound-effects/search/level/
+win_sound = pygame.mixer.Sound('files/win_sound.mp3')
+win_sound.set_volume(0.5)
+draw_sound = pygame.mixer.Sound('files/draw_sound.wav')
+draw_sound.set_volume(0.5)
+# from https://pixabay.com/sound-effects/search/game-over/ 
+fail_sound = pygame.mixer.Sound('files/fail_sound.mp3')
+
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Clock 객체 생성
@@ -28,6 +51,7 @@ class FallingInfo:
         self.base_pos = (None,None)  # 바닥 돌의 좌표
         self.target_pos = (None, None)  # 도달해야 하는 좌표 
         self.v = 0  # 속도
+        self.max_v = 0  # 소리의 크기를 계산하기 위한 최대 속력 
         self.g = 0.8  # 중력가속도 
         # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
         self.bounce = 0  # 돌이 튀어오른 수
@@ -47,10 +71,17 @@ class FallingInfo:
         self.v += self.g
         self.pos[1] += self.v
 
-        if self.target_pos[1] < self.pos[1] and self.v > 0: 
-            self.v *= -1/2
+        if self.target_pos[1] < self.pos[1] and self.v > 0:
+            
+            
             self.bounce += 1
+            if self.bounce==1 and self.max_v==0: self.max_v = self.v
+            drop_sound.set_volume(self.v/self.max_v)
+            drop_sound.play()
+            self.v *= -1/2
             self.pos[1] = self.target_pos[1]
+
+            
         if self.bounce >= 5: 
             self.v = 0
             self.pos = self.target_pos
@@ -94,6 +125,34 @@ def save_review(states, player, difficulty):
         # pickle.dump() 함수를 사용하여 객체를 저장합니다.
         pickle.dump(save_infos, file)
 
+'''
+게임 기록을 불러오고 저장하는 함수
+record = {
+    'easy':[win, draw, lose],
+    'normal':[win, draw, lose],
+    'hard':[win, draw, lose]
+}
+'''
+def load_record():
+    if not os.path.isfile('files/record.pkl'):
+        init_record = {
+            'easy':[0,0,0],
+            'normal':[0,0,0],
+            'hard':[0,0,0]
+        }
+        with open('files/record.pkl', 'wb') as file:
+            pickle.dump(init_record, file)
+        return init_record
+    else:
+        with open('files/record.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
+
+def save_record(record):
+    with open('files/record.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(record, file)
+
 
 
             
@@ -104,6 +163,8 @@ def intro():
     intro_button_height = h//16
     print(w,h,intro_button_width,intro_button_height)
 
+    background_sound.play(-1)
+    music_on = True
 
     intro_buttons = [
         Button('new game',cx=w/2,cy=h/2+intro_button_height*1,width=intro_button_width, height=intro_button_height),
@@ -122,12 +183,18 @@ def intro():
     run = True
     event = None
     SCREEN.fill((255,255,255))
+    
     while run:
+        if not music_on: 
+            background_sound.set_volume(0.3)
+            music_on = True
         SCREEN.blit(logo_image, logo_rect)
         for button in intro_buttons:
             action = button.draw_and_get_event(SCREEN,event)
             if action:
                 print(button.name)
+                music_on = False
+                background_sound.set_volume(0.1)
                 if button.name == 'new game': select_difficulty()
                 elif button.name == 'continue': play(difficulty=None, cont_game=True)
                 elif button.name == 'how to': how_to()
@@ -244,7 +311,9 @@ def is_win(board, player):
                     return player
                 
 
-    if 0 not in board[0,:]: player = 3
+    if 0 not in board[0,:]: 
+        player = 3
+        return player
     return 0
 
 def select_difficulty():
@@ -352,6 +421,8 @@ def play(difficulty,cont_game=False):
     draw_table()
     draw_cursor(x,player)
     pygame.display.flip()
+    background_sound.set_volume(0)
+    game_sound.play(-1)
     next_board = copy.deepcopy(board)
     while run:
         SCREEN.fill(WHITE)
@@ -360,8 +431,10 @@ def play(difficulty,cont_game=False):
             board = next_board
         if is_win(board,2//player) != 0:
             print("for review")
+            game_sound.stop()
             save_review(continue_boards,2//player, difficulty)
-            end(board, is_win(board,2//player))
+            end(board, is_win(board,2//player), difficulty)
+            
             return
         
         
@@ -369,9 +442,10 @@ def play(difficulty,cont_game=False):
             block_event = True
             col = test_main(board, player,difficulty)
             next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
-            falling_piece.set_pos((drop_row,drop_col))
-            falling_piece.calculate_info()
-            if is_valid: continue_boards.append(copy.deepcopy(next_board))
+            if is_valid: 
+                continue_boards.append(copy.deepcopy(next_board))
+                falling_piece.set_pos((drop_row,drop_col))
+                falling_piece.calculate_info()
             
         for event in pygame.event.get():
             x,y = pygame.mouse.get_pos()
@@ -385,9 +459,10 @@ def play(difficulty,cont_game=False):
                 col = x2col(x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 block_event = True
-                falling_piece.set_pos((drop_row,drop_col))
-                falling_piece.calculate_info()
-                if is_valid: continue_boards.append(copy.deepcopy(next_board))
+                if is_valid: 
+                    continue_boards.append(copy.deepcopy(next_board))
+                    falling_piece.set_pos((drop_row,drop_col))
+                    falling_piece.calculate_info()
                 # print(board)
 
             
@@ -395,12 +470,14 @@ def play(difficulty,cont_game=False):
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 save_continue(continue_boards, player,difficulty)
+                game_sound.stop()
                 run = False
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             save_continue(continue_boards, player,difficulty)
             SCREEN.fill(WHITE)
+            game_sound.stop()
             return
         
         if not falling_piece.stopped():
@@ -417,13 +494,27 @@ def play(difficulty,cont_game=False):
         clock.tick(frame)
         pygame.display.flip()
 
-def end(board, player):
+def end(board, player, difficulty):
     save_continue([],None, None)
     w,h = SCREEN.get_size()
-    if player == 1: text_content = "이겼습니다! 축하드립니다!"
-    elif player == 2: text_content = "아쉽게도 졌네요 ㅠㅠ"
-    else: text_content = "비겼습니다! 한번 더하면 이길지도...?"
 
+    record = load_record()
+
+    if player == 1: 
+        text_content = "이겼습니다! 축하드립니다!"
+        record[difficulty][0] += 1
+        win_sound.play()
+    elif player == 2: 
+        text_content = "아쉽게도 졌네요 ㅠㅠ"
+        record[difficulty][2] += 1
+        fail_sound.play()
+    else: 
+        text_content = "비겼습니다! 한번 더하면 이길지도...?"
+        record[difficulty][1] += 1
+        draw_sound.play()
+
+    save_record(record)
+    print("record:",record)
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -698,6 +789,7 @@ def review():
                         break
                 pos = cord2pos((row,col))
                 cord_recommend = pos
+                recommend_sound.play()
         
         if cord_recommend != (None, None):
             draw_circle_with_pos(cord_recommend,player=3)
