@@ -20,6 +20,7 @@ drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
 win_sound = pygame.mixer.Sound('files/win_sound.mp3')
 win_sound.set_volume(0.5)
 draw_sound = pygame.mixer.Sound('files/draw_sound.wav')
+draw_sound.set_volume(0.5)
 # from https://pixabay.com/sound-effects/search/game-over/ 
 fail_sound = pygame.mixer.Sound('files/fail_sound.mp3')
 
@@ -111,6 +112,34 @@ def save_review(states, player, difficulty):
     with open('files/review.pkl', 'wb') as file:
         # pickle.dump() 함수를 사용하여 객체를 저장합니다.
         pickle.dump(save_infos, file)
+
+'''
+게임 기록을 불러오고 저장하는 함수
+record = {
+    'easy':[win, draw, lose],
+    'normal':[win, draw, lose],
+    'hard':[win, draw, lose]
+}
+'''
+def load_record():
+    if not os.path.isfile('files/record.pkl'):
+        init_record = {
+            'easy':[0,0,0],
+            'normal':[0,0,0],
+            'hard':[0,0,0]
+        }
+        with open('files/record.pkl', 'wb') as file:
+            pickle.dump(init_record, file)
+        return init_record
+    else:
+        with open('files/record.pkl', 'rb') as file:
+        # pickle.load() 함수를 사용하여 객체를 로드합니다.
+            return pickle.load(file)
+
+def save_record(record):
+    with open('files/record.pkl', 'wb') as file:
+        # pickle.dump() 함수를 사용하여 객체를 저장합니다.
+        pickle.dump(record, file)
 
 
 
@@ -381,7 +410,7 @@ def play(difficulty,cont_game=False):
         if is_win(board,2//player) != 0:
             print("for review")
             save_review(continue_boards,2//player, difficulty)
-            end(board, is_win(board,2//player))
+            end(board, is_win(board,2//player), difficulty)
             return
         
         
@@ -439,17 +468,27 @@ def play(difficulty,cont_game=False):
         clock.tick(frame)
         pygame.display.flip()
 
-def end(board, player):
+def end(board, player, difficulty):
     save_continue([],None, None)
     w,h = SCREEN.get_size()
+
+    record = load_record()
+
     if player == 1: 
         text_content = "이겼습니다! 축하드립니다!"
+        record[difficulty][0] += 1
         win_sound.play()
     elif player == 2: 
         text_content = "아쉽게도 졌네요 ㅠㅠ"
+        record[difficulty][2] += 1
         fail_sound.play()
-    else: text_content = "비겼습니다! 한번 더하면 이길지도...?"
+    else: 
+        text_content = "비겼습니다! 한번 더하면 이길지도...?"
+        record[difficulty][1] += 1
+        draw_sound.play()
 
+    save_record("record:",record)
+    print(record)
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
