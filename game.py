@@ -13,28 +13,7 @@ from test_model import test_main
 pygame.init()
 
 
-pygame.mixer.init()
-# from https://pixabay.com/ko/music/search/genre/%EB%B9%84%EB%94%94%EC%98%A4%20%EA%B2%8C%EC%9E%84/
-background_sound = pygame.mixer.Sound('files/bgm_edit.mp3')
-background_sound.set_volume(0.3)
 
-# from https://pixabay.com/ko/sound-effects/search/arcade/
-game_sound = pygame.mixer.Sound('files/game_sound.mp3')
-
-# from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
-drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
-
-# from https://pixabay.com/ko/sound-effects/search/game%20success/
-recommend_sound = pygame.mixer.Sound('files/recommend_sound_2_edit.wav')
-recommend_sound.set_volume(0.7)
-
-# from https://pixabay.com/sound-effects/search/level/
-win_sound = pygame.mixer.Sound('files/win_sound.mp3')
-win_sound.set_volume(0.5)
-draw_sound = pygame.mixer.Sound('files/draw_sound.wav')
-draw_sound.set_volume(0.5)
-# from https://pixabay.com/sound-effects/search/game-over/ 
-fail_sound = pygame.mixer.Sound('files/fail_sound.mp3')
 
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
