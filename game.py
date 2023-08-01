@@ -14,8 +14,20 @@ pygame.init()
 
 
 pygame.mixer.init()
+# from https://pixabay.com/ko/music/search/genre/%EB%B9%84%EB%94%94%EC%98%A4%20%EA%B2%8C%EC%9E%84/
+background_sound = pygame.mixer.Sound('files/bgm_edit.mp3')
+background_sound.set_volume(0.3)
+
+# from https://pixabay.com/ko/sound-effects/search/arcade/
+game_sound = pygame.mixer.Sound('files/game_sound.mp3')
+
 # from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
 drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
+
+# from https://pixabay.com/ko/sound-effects/search/game%20success/
+recommend_sound = pygame.mixer.Sound('files/recommend_sound_2_edit.wav')
+recommend_sound.set_volume(0.7)
+
 # from https://pixabay.com/sound-effects/search/level/
 win_sound = pygame.mixer.Sound('files/win_sound.mp3')
 win_sound.set_volume(0.5)
@@ -63,7 +75,7 @@ class FallingInfo:
             
             
             self.bounce += 1
-            if self.bounce==1: self.max_v = self.v
+            if self.bounce==1 and self.max_v==0: self.max_v = self.v
             drop_sound.set_volume(self.v/self.max_v)
             drop_sound.play()
             self.v *= -1/2
@@ -151,6 +163,8 @@ def intro():
     intro_button_height = h//16
     print(w,h,intro_button_width,intro_button_height)
 
+    background_sound.play(-1)
+    music_on = True
 
     intro_buttons = [
         Button('new game',cx=w/2,cy=h/2+intro_button_height*1,width=intro_button_width, height=intro_button_height),
@@ -169,12 +183,18 @@ def intro():
     run = True
     event = None
     SCREEN.fill((255,255,255))
+    
     while run:
+        if not music_on: 
+            background_sound.set_volume(0.3)
+            music_on = True
         SCREEN.blit(logo_image, logo_rect)
         for button in intro_buttons:
             action = button.draw_and_get_event(SCREEN,event)
             if action:
                 print(button.name)
+                music_on = False
+                background_sound.set_volume(0.1)
                 if button.name == 'new game': select_difficulty()
                 elif button.name == 'continue': play(difficulty=None, cont_game=True)
                 elif button.name == 'how to': how_to()
@@ -401,6 +421,8 @@ def play(difficulty,cont_game=False):
     draw_table()
     draw_cursor(x,player)
     pygame.display.flip()
+    background_sound.set_volume(0)
+    game_sound.play(-1)
     next_board = copy.deepcopy(board)
     while run:
         SCREEN.fill(WHITE)
@@ -409,8 +431,10 @@ def play(difficulty,cont_game=False):
             board = next_board
         if is_win(board,2//player) != 0:
             print("for review")
+            game_sound.stop()
             save_review(continue_boards,2//player, difficulty)
             end(board, is_win(board,2//player), difficulty)
+            
             return
         
         
@@ -446,12 +470,14 @@ def play(difficulty,cont_game=False):
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 save_continue(continue_boards, player,difficulty)
+                game_sound.stop()
                 run = False
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             save_continue(continue_boards, player,difficulty)
             SCREEN.fill(WHITE)
+            game_sound.stop()
             return
         
         if not falling_piece.stopped():
@@ -487,8 +513,8 @@ def end(board, player, difficulty):
         record[difficulty][1] += 1
         draw_sound.play()
 
-    save_record("record:",record)
-    print(record)
+    save_record(record)
+    print("record:",record)
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -763,6 +789,7 @@ def review():
                         break
                 pos = cord2pos((row,col))
                 cord_recommend = pos
+                recommend_sound.play()
         
         if cord_recommend != (None, None):
             draw_circle_with_pos(cord_recommend,player=3)

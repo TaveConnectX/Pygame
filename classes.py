@@ -16,6 +16,11 @@ DARKGRAY = (127,127,127)
 P1COLOR = (255,0,0)
 P2COLOR = (255,255,0)
 
+pygame.mixer.init()
+# from https://pixabay.com/ko/sound-effects/search/arcade/
+button_sound = pygame.mixer.Sound('files/button_sound_edit.mp3')
+button_sound.set_volume(0.3)
+
 class Button:
     def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font='malgungothic',font_size=30):
         self.name = name
@@ -47,6 +52,7 @@ class Button:
                     if self.clicked: 
                         self.clicked = False
                         self.clicked_color = LIGHTGRAY
+                        button_sound.play()
                         return True
                     else:
                         self.clicked = False
