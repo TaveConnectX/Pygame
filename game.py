@@ -11,8 +11,8 @@ from test_model import test_main
 
 
 pygame.init()
-
-
+pygame.mixer.init()
+drop_sound = pygame.mixer.Sound('files/drop_sound_2.wav')
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Clock 객체 생성
@@ -28,6 +28,7 @@ class FallingInfo:
         self.base_pos = (None,None)  # 바닥 돌의 좌표
         self.target_pos = (None, None)  # 도달해야 하는 좌표 
         self.v = 0  # 속도
+        self.max_v = 0  # 소리의 크기를 계산하기 위한 최대 속력 
         self.g = 0.8  # 중력가속도 
         # 돌이 무한으로 튀어올라서 멈추지 않는 문제를 방지하기 위해 bounce한 수 세기 
         self.bounce = 0  # 돌이 튀어오른 수
@@ -47,10 +48,17 @@ class FallingInfo:
         self.v += self.g
         self.pos[1] += self.v
 
-        if self.target_pos[1] < self.pos[1] and self.v > 0: 
-            self.v *= -1/2
+        if self.target_pos[1] < self.pos[1] and self.v > 0:
+            
+            
             self.bounce += 1
+            if self.bounce==1: self.max_v = self.v
+            drop_sound.set_volume(self.v/self.max_v)
+            drop_sound.play()
+            self.v *= -1/2
             self.pos[1] = self.target_pos[1]
+
+            
         if self.bounce >= 5: 
             self.v = 0
             self.pos = self.target_pos
