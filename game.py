@@ -15,7 +15,7 @@ pygame.init()
 
 
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-ver = 0.5
+ver = 0.5  # version
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
