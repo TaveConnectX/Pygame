@@ -158,6 +158,7 @@ def intro():
     logo_rect.x = w/2- logo_image.get_width()/2
     logo_rect.y = h/4- logo_image.get_height()/2
 
+    # from https://www.pngwing.com/en/free-png-ddmrj
     setting_image = pygame.image.load('image/setting_icon.png')
     setting_image = pygame.transform.scale(setting_image, (70, 70))
     setting_rect = setting_image.get_rect()

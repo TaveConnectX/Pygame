@@ -35,9 +35,12 @@ recommend_sound.set_volume(0.7)
 # from https://pixabay.com/sound-effects/search/level/
 win_sound = pygame.mixer.Sound('files/win_sound.mp3')
 win_sound.set_volume(0.5)
+
+# from https://pixabay.com, but I'm not sure what is the exact address.
 draw_sound = pygame.mixer.Sound('files/draw_sound.wav')
 draw_sound.set_volume(0.5)
-# from https://pixabay.com/sound-effects/search/game-over/ 
+
+# from https://pixabay.com/ko/sound-effects/search/booing/
 fail_sound = pygame.mixer.Sound('files/boo.mp3')
 fail_sound.set_volume(0.7)
 
@@ -46,6 +49,7 @@ button_sound = pygame.mixer.Sound('files/button_sound_edit.mp3')
 button_sound.set_volume(0.3)
 
 
+# main_font from https://campaign.naver.com/nanumsquare_neo/#download
 
 class Button:
     def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font_size=30):
