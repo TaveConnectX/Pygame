@@ -7,7 +7,7 @@ import pickle
 from classes import *
 from test_model import test_main
 
-# ver 0.2 
+
 
 
 pygame.init()
@@ -15,7 +15,7 @@ pygame.init()
 
 
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
+ver = 0.5
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
@@ -860,6 +860,16 @@ def info():
     hard_text_rect = hard_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     hard_text_rect.center = hard_border.center
 
+
+    font = pygame.font.Font('files/main_font.ttf', 20)
+    ver_text_content = "ver {}".format(ver)
+    ver_border = pygame.draw.rect(SCREEN, WHITE, (w-100,h-50,w,h))
+    
+    ver_text = font.render(ver_text_content, True, BLACK)
+    ver_text_rect = ver_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    ver_text_rect.center = ver_border.center
+
+
     back_button = Button('<',25,25,50,50)
     go_back = False
     # 선택하면 play()    
@@ -878,6 +888,7 @@ def info():
         SCREEN.blit(easy_text, easy_text_rect)
         SCREEN.blit(normal_text, normal_text_rect)
         SCREEN.blit(hard_text, hard_text_rect)
+        SCREEN.blit(ver_text, ver_text_rect)
         pygame.display.flip()
 
     
