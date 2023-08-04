@@ -258,6 +258,7 @@ class MCTS:
                         device=self.model.device
                     ).unsqueeze(0)
                 )
+                # policy, value = self.model(np.expand_dims(self.game.get_encoded_state(node.state), axis=0))
                 policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
                 valid_moves = self.game.get_valid_moves(node.state)
                 policy *= valid_moves
@@ -448,6 +449,7 @@ class MCTS_alphago:
         pass
     
     def get_value_from_net(self, state):
+        print(state)
         v_idx = torch.argmax(self.value_model(torch.FloatTensor(state).flatten().to(self.model.device)))
         if v_idx==0: value_from_net = 1
         elif v_idx==1: value_from_net = 0

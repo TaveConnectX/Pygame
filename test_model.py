@@ -24,7 +24,7 @@ test_model.py: 모델을 테스트할 수 있는 코드, 해당 state를 모델�
 
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 model_class = {
     'easy':ResNetforDQN(action_size=49),  # Minimax DDQN with selfplay
     'normal':ResNetforDQN(action_size=49),  # AlphaGO with Minimax DDQN
@@ -230,7 +230,7 @@ def get_DQN_action(model, state, vas):
     q_values = model(state)
     # print(q_values)
     valid_q_values = q_values.squeeze()[torch.tensor(vas)]
-    return vas[torch.argmax(valid_q_values)]
+    return vas[np.argmax(valid_q_values)]
 
 def get_minimax_action(model, state, valid_actions):
 

@@ -4,7 +4,7 @@ from torch import nn
 import torch.nn.init as init
 import torch.nn.functional as F
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 
 # class 가독성을 놎이기 위해 network 부분만 따로 분리
 class CFLinear(nn.Module):
@@ -168,7 +168,7 @@ class MinimaxModel():
 class ResNetforDQN(nn.Module):
     def __init__(self, input_channel=3, num_blocks=5, num_hidden=128, action_size=7):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
         self.model_type = 'CNN'
         self.model_name = 'DQN-ResNet-v1'
         self.action_size = action_size
@@ -221,7 +221,7 @@ class ResNetforDQN(nn.Module):
 class AlphaZeroResNet(nn.Module):
     def __init__(self, input_channel=3, num_blocks=5, num_hidden=128):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
         self.model_name = 'AlphaZero-ResNet-v1'
         self.start_block = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
