@@ -315,29 +315,31 @@ def get_next_state(board, col,player):
             return next_board, 2//player, (row, col), True
 
 # made by chatgpt and I edit little bit.
-# 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
+# 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다.
+# 연결된 4개를 표시하기 위해 return을 수정하였다. 
+# return (이긴 플레이어, 좌표1, 좌표2, 좌표3, 좌표4)
 def is_win(board, player):
     for i in range(6):
         for j in range(7):
             if board[i][j] == player:
                 # horizontal
                 if j + 3 < 7 and board[i][j+1] == board[i][j+2] == board[i][j+3] == player:
-                    return player
+                    return player, (i,j), (i,j+1), (i,j+2), (i,j+3)
                 # vertical
                 if i + 3 < 6 and board[i+1][j] == board[i+2][j] == board[i+3][j] == player:
-                    return player
+                    return player, (i,j), (i+1,j), (i+2,j), (i+3,j)
                 # diagonal (down right)
                 if i + 3 < 6 and j + 3 < 7 and board[i+1][j+1] == board[i+2][j+2] == board[i+3][j+3] == player:
-                    return player
+                    return player, (i,j), (i+1,j+1), (i+2,j+2), (i+3,j+3)
                 # diagonal (up right)
                 if i - 3 >= 0 and j + 3 < 7 and board[i-1][j+1] == board[i-2][j+2] == board[i-3][j+3] == player:
-                    return player
+                    return player, (i,j), (i-1,j+1), (i-2,j+2), (i-3,j+3)
                 
 
     if 0 not in board[0,:]: 
         player = 3
-        return player
-    return 0
+        return player, None, None, None, None
+    return 0, None, None, None, None
 
 def select_difficulty():
     w, h = SCREEN.get_size()
@@ -452,11 +454,12 @@ def play(difficulty,cont_game=False):
         if falling_piece.stopped(): 
             if block_event: block_event = False
             board = next_board
-        if is_win(board,2//player) != 0:
+        win_info = is_win(board,2//player)
+        if win_info[0] != 0:
             print("for review")
             game_sound.stop()
             save_review(continue_boards,2//player, difficulty)
-            end(board, is_win(board,2//player), difficulty)
+            end(board, win_info[0], win_info[1:], difficulty)
             
             return
         
@@ -517,8 +520,50 @@ def play(difficulty,cont_game=False):
         clock.tick(frame)
         pygame.display.flip()
 
-def end(board, player, difficulty):
+def show_connect4(board, player, coords):
+    run = True
+    term = frame//2
+    t = 0
+    n = 0
+    while run:
+        t += 1
+        SCREEN.fill(WHITE)
+            
+        for event in pygame.event.get():
+                # print(board)
+
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=board[i][j])
+        
+        # coords[:n]까지 그리기
+        for i in range(n):
+            pos = cord2pos(coords[i])
+            draw_circle_with_pos(pos, player=3)
+        if not t%term:
+            if n<=3: connect4_sound[n].play()
+            n += 1
+            
+            if n == 5: return
+            
+
+
+        draw_table()
+        clock.tick(frame)
+        pygame.display.flip()
+
+
+
+
+def end(board, player, coords, difficulty):
     save_continue([],None, None)
+    show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
 
     record = load_record()
@@ -567,6 +612,10 @@ def end(board, player, difficulty):
                 if board[i][j] != 0:
                     pos = cord2pos((i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
+
+        for i in range(4):
+            pos = cord2pos(coords[i])
+            draw_circle_with_pos(pos, player=3)
         draw_table()
         
 
