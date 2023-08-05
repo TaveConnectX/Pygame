@@ -1,5 +1,5 @@
-from models import *
-from test_model import load_model, board_normalization, get_encoded_state
+from before_onnx.models import *
+from before_onnx.test_model import load_model, board_normalization, get_encoded_state
 import torch
 import numpy as np
 import onnx
@@ -165,6 +165,7 @@ ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
 ort_outs = ort_session.run(None, ort_inputs)
 
 # ONNX 런타임과 PyTorch에서 연산된 결과값 비교
+print("input:",x.shape)
 print("prev value:",y)
 print("after value:", ort_outs)
 np.testing.assert_allclose(to_numpy(y), ort_outs[0], rtol=1e-03, atol=1e-05)
