@@ -1,5 +1,6 @@
 import pygame
-
+import sys
+import os
 SCREEN_WIDTH = 540
 SCREEN_HEIGHT = 960
 
@@ -15,6 +16,7 @@ DARKGRAY = (127,127,127)
 
 P1COLOR = (255,0,0)
 P2COLOR = (255,255,0)
+
 
 pygame.mixer.init()
 
