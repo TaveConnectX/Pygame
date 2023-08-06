@@ -51,6 +51,13 @@ button_sound = pygame.mixer.Sound('files/sound/button_sound.mp3')
 button_sound.set_volume(0.3)
 
 
+# from https://pixabay.com/ko/sound-effects/search/xylophone/
+do = pygame.mixer.Sound('files/sound/xylophone_do.mp3')
+mi = pygame.mixer.Sound('files/sound/xylophone_mi.mp3')
+sol = pygame.mixer.Sound('files/sound/xylophone_sol.mp3')
+high_do = pygame.mixer.Sound('files/sound/xylophone_do2.mp3')
+connect4_sound = [do, mi, sol, high_do]
+
 # main_font from https://campaign.naver.com/nanumsquare_neo/#download
 
 class Button:

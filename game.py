@@ -253,8 +253,8 @@ def draw_cursor(x, player):
 def draw_circle_with_pos(pos,player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
-    if player == 1: color = P1COLOR
-    elif player == 2: color = P2COLOR
+    if player in [1,-1]: color = P1COLOR
+    elif player in [2,-2]: color = P2COLOR
     else:
         R1, G1, B1 = P1COLOR
         R2, G2, B2 = P2COLOR
@@ -264,6 +264,8 @@ def draw_circle_with_pos(pos,player):
     y += 0.5
     pos = (x,y)
     pygame.draw.circle(SCREEN,color,pos,r)
+    if player < 0:
+        pygame.draw.circle(SCREEN,WHITE,pos,r*0.8)
 
 
 # board 상의 좌표를 SCREEN의 좌표로 변경
@@ -315,29 +317,31 @@ def get_next_state(board, col,player):
             return next_board, 2//player, (row, col), True
 
 # made by chatgpt and I edit little bit.
-# 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다 
+# 가로, 세로, 대각선에 완성된 줄이 있는지를 체크한다.
+# 연결된 4개를 표시하기 위해 return을 수정하였다. 
+# return (이긴 플레이어, 좌표1, 좌표2, 좌표3, 좌표4)
 def is_win(board, player):
     for i in range(6):
         for j in range(7):
             if board[i][j] == player:
                 # horizontal
                 if j + 3 < 7 and board[i][j+1] == board[i][j+2] == board[i][j+3] == player:
-                    return player
+                    return player, (i,j), (i,j+1), (i,j+2), (i,j+3)
                 # vertical
                 if i + 3 < 6 and board[i+1][j] == board[i+2][j] == board[i+3][j] == player:
-                    return player
+                    return player, (i,j), (i+1,j), (i+2,j), (i+3,j)
                 # diagonal (down right)
                 if i + 3 < 6 and j + 3 < 7 and board[i+1][j+1] == board[i+2][j+2] == board[i+3][j+3] == player:
-                    return player
+                    return player, (i,j), (i+1,j+1), (i+2,j+2), (i+3,j+3)
                 # diagonal (up right)
                 if i - 3 >= 0 and j + 3 < 7 and board[i-1][j+1] == board[i-2][j+2] == board[i-3][j+3] == player:
-                    return player
+                    return player, (i,j), (i-1,j+1), (i-2,j+2), (i-3,j+3)
                 
 
     if 0 not in board[0,:]: 
         player = 3
-        return player
-    return 0
+        return player, None, None, None, None
+    return 0, None, None, None, None
 
 def select_difficulty():
     w, h = SCREEN.get_size()
@@ -452,11 +456,12 @@ def play(difficulty,cont_game=False):
         if falling_piece.stopped(): 
             if block_event: block_event = False
             board = next_board
-        if is_win(board,2//player) != 0:
+        win_info = is_win(board,2//player)
+        if win_info[0] != 0:
             print("for review")
             game_sound.stop()
             save_review(continue_boards,2//player, difficulty)
-            end(board, is_win(board,2//player), difficulty)
+            end(board, win_info[0], win_info[1:], difficulty)
             
             return
         
@@ -517,8 +522,50 @@ def play(difficulty,cont_game=False):
         clock.tick(frame)
         pygame.display.flip()
 
-def end(board, player, difficulty):
+def show_connect4(board, player, coords):
+    run = True
+    term = frame//2
+    t = 0
+    n = 0
+    while run:
+        t += 1
+        SCREEN.fill(WHITE)
+            
+        for event in pygame.event.get():
+                # print(board)
+
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+        
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] != 0:
+                    pos = cord2pos((i,j))
+                    draw_circle_with_pos(pos, player=board[i][j])
+        
+        # coords[:n]까지 그리기
+        for i in range(n):
+            pos = cord2pos(coords[i])
+            draw_circle_with_pos(pos, player=-player)
+        if not t%term:
+            if n<=3: connect4_sound[n].play()
+            n += 1
+            
+            if n == 5: return
+            
+
+
+        draw_table()
+        clock.tick(frame)
+        pygame.display.flip()
+
+
+
+
+def end(board, player, coords, difficulty):
     save_continue([],None, None)
+    show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
 
     record = load_record()
@@ -567,6 +614,10 @@ def end(board, player, difficulty):
                 if board[i][j] != 0:
                     pos = cord2pos((i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
+
+        for i in range(4):
+            pos = cord2pos(coords[i])
+            draw_circle_with_pos(pos, player=-player)
         draw_table()
         
 
@@ -606,6 +657,8 @@ def how_to():
     run = True
     board = np.zeros((6,7))
     next_board = copy.deepcopy(board)
+    term, t, n, dingdong = frame//2, 0, 0, False
+    page_3_arr = [(5,1),(4,2),(3,3),(2,4)]
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.Font('files/font/main_font.ttf', 30)
     text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
@@ -621,8 +674,17 @@ def how_to():
                 board = np.zeros((6,7))
                 player = 1
             if board[4][2]==1:
-                board[4][2]=0
-                player=1
+                dingdong = True
+                t += 1
+                if not t%term:
+                    if n<=3: connect4_sound[n].play()
+                    n += 1
+                    
+                if n==5:
+                    dingdong = False
+                    t, n = 0, 0
+                    board[4][2]=0
+                    player=1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -656,7 +718,7 @@ def how_to():
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
 
-            if not block_event:
+            if not block_event and not dingdong:
                 block_event = True
                 col = 2
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
@@ -680,6 +742,7 @@ def how_to():
             idx = 0
             falling_piece = FallingInfo()
             board, next_board = np.zeros((6,7)), np.zeros((6,7))
+            t,n, dingdong = 0,0,False
         if go_next:
             page = page+1 if page < 3 else page
             go_next = False
@@ -700,11 +763,16 @@ def how_to():
         if not falling_piece.stopped():
             falling_piece.calculate_info()
             draw_circle_with_pos(falling_piece.pos, player=2//player)
+
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
                     pos = cord2pos((i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
+        
+        for i in range(n):
+            pos = cord2pos(page_3_arr[i])
+            draw_circle_with_pos(pos, player=-2//player)
         draw_table()
         clock.tick(frame)
         SCREEN.blit(text, text_rect)
@@ -766,8 +834,14 @@ def review():
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
+
+    
+
     if (len(review_boards)+player)%2: fp = 1
     else: fp = 0
+    last_board = review_boards[-1]
+    _, *last_coords = is_win(last_board, player)
+
     go_back, go_prev, go_next, show_recommend= False, False, False, False
     cord_recommend = (None, None)
     SCREEN.fill(WHITE)
@@ -822,6 +896,10 @@ def review():
                 if review_boards[idx][i][j] != 0:
                     pos = cord2pos((i,j))
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
+        if idx == len(review_boards)-1:
+            for coord in last_coords:
+                pos = cord2pos(coord)
+                draw_circle_with_pos(pos, player=-player)
         draw_table()
         text_content = "{} / {}".format(idx, len(review_boards)-1)
         text = font.render(text_content, True, BLACK)
