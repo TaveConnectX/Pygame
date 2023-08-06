@@ -15,9 +15,9 @@ def load_continue():
             return pickle.load(file)
 
 # 뒤로 가기 등을 눌렀을 때 continue_states 배열을 저장
-def save_continue(continue_states, player, difficulty):
+def save_continue(continue_states, player, difficulty, remained_undo):
     if continue_states:
-        save_infos = [continue_states,player, difficulty]
+        save_infos = [continue_states,player, difficulty, remained_undo]
     else: save_infos = []
     with open('files/continue.pkl', 'wb') as file:
         # pickle.dump() 함수를 사용하여 객체를 저장합니다.
@@ -131,10 +131,14 @@ def x2col(surface, x):
         col = -1
     return col
 
-def is_valid_x(surface, x):
+def is_valid_x(surface, x, y, *buttons):
     w,h = surface.get_size()
     if x<50 or w-50<x:
         return False
+    for button in buttons:
+        cx, cy, w, h = button.cx, button.cy, button.width, button.height
+        if cx-w/2<=x<=cx+w/2 and cy-h/2<=y<=cy+h/2:
+            return False
     else: return True
 
 

@@ -306,11 +306,12 @@ def play(difficulty,cont_game=False):
         player = np.random.choice([1,2])
     else: player = FIRST_PLAYER
     back_button = Button('<',25,25,50,50)
+    
     go_back = False
     if cont_game:
         load_infos = load_continue()
         if load_infos: 
-            boards, player, difficulty = load_infos
+            boards, player, difficulty, remained_undo = load_infos
             board = boards[-1]
             # 이어하기를 위한 보드 초기화
             continue_boards = copy.deepcopy(boards)
@@ -322,7 +323,9 @@ def play(difficulty,cont_game=False):
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
+        remained_undo = 3 
 
+    undo_button = Button('undo  {}'.format(remained_undo),SCREEN.get_width()-97,500,100,50, font_size=20)
     
     block_event = False
     run = True
@@ -368,7 +371,7 @@ def play(difficulty,cont_game=False):
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
-                if not is_valid_x(SCREEN, clicked_x): continue
+                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(SCREEN, x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
@@ -383,17 +386,28 @@ def play(difficulty,cont_game=False):
             
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
-                save_continue(continue_boards, player,difficulty)
+                save_continue(continue_boards, player,difficulty, remained_undo)
                 game_sound[0].stop()
                 run = False
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
+        undo_action = undo_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
-            save_continue(continue_boards, player,difficulty)
+            save_continue(continue_boards, player,difficulty, remained_undo)
             SCREEN.fill(WHITE)
             game_sound[0].stop()
             return
+        
+        if undo_action:
+            if remained_undo==0 or len(continue_boards)<=2: pass
+            else:
+                remained_undo -= 1
+                continue_boards = continue_boards[:-2]
+                board = continue_boards[-1]
+                next_board = continue_boards[-1]
+                undo_button.name = 'undo  {}'.format(remained_undo)
+                falling_piece.pos = (None, None)
         
         if not falling_piece.stopped():
             falling_piece.calculate_info()
@@ -451,7 +465,7 @@ def show_connect4(board, player, coords):
 
 
 def end(board, player, coords, difficulty):
-    save_continue([],None, None)
+    save_continue([],None, None, None)
     show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
 
