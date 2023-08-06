@@ -104,8 +104,8 @@ def draw_table(surface):
 
 
 # board 상의 좌표를 SCREEN의 좌표로 변경
-def cord2pos(surface, cord):
-    y,x = cord
+def coord2pos(surface, coord):
+    y,x = coord
     # y = 5-y
     w,h = surface.get_size()
     r = (w-100)/7/2
