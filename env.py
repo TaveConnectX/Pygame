@@ -403,7 +403,7 @@ class MCTS_alphago:
         pass
     
     def get_value_from_net(self, state):
-        print(state)
+        # print(state)
         v_idx = np.argmax(self.value_model.run(None, {self.value_model.get_inputs()[0].name: np.expand_dims(np.expand_dims(state,axis=0),0).astype(np.float32)})[0][0])
         if v_idx==0: value_from_net = 1
         elif v_idx==1: value_from_net = 0
