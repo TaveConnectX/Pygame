@@ -1,4 +1,5 @@
 import pygame
+import pygame.gfxdraw
 import sys
 import numpy as np
 import os
@@ -298,6 +299,20 @@ def draw_circle_with_pos(pos,player):
     if player < 0:
         pygame.draw.circle(SCREEN,WHITE,pos,r*0.8)
 
+
+def fill_arc(color, center, radius, theta0, theta1, break_time, ndiv=50):
+    x0, y0 = center
+
+    dtheta = (theta1 - theta0) / ndiv
+    angles = [theta0 + i*dtheta for i in range(ndiv + 1)] 
+
+    points = [(x0, y0)] + [(x0 + radius * np.cos(theta), y0 - radius * np.sin(theta)) for theta in angles]
+
+    r,g,b = color
+    color = (r+(255-r)/30*break_time,g+(255-g)/30*break_time,b+(255-b)/30*break_time)
+    pygame.gfxdraw.filled_polygon(SCREEN, points, color)
+
+
 def get_broken_circle_info_with_coord(coord, player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
@@ -305,27 +320,38 @@ def get_broken_circle_info_with_coord(coord, player):
     elif player==2: color=P2COLOR
     else:
         color = None
+
     rand_angle = np.random.uniform(0, 2*np.pi)
     x,y = coord2pos(SCREEN,coord)
     broken_x, broken_y = x+r*np.cos(rand_angle), y+r*np.sin(rand_angle)
+    # print("check broken")
+    # print("r:",r)
+    # print("x:",x,", broken x:", broken_x)
+    # print("y:",y, ", broken y:",broken_y)
 
-    rotate_rad = 10 * (np.pi / 180.0)
-    broken_center_x_1 = round(np.cos(rotate_rad)*(x-broken_x) - np.sin(rotate_rad)*(y-broken_y)) + broken_x
-    broken_center_y_1 = round(np.sin(rotate_rad)*(x-broken_x) + np.cos(rotate_rad)*(y-broken_y)) + broken_y
+    rotate_rad_1 = np.random.uniform(15, 35) * (np.pi / 180.0)
+    broken_center_x_1 = round(np.cos(rotate_rad_1)*(x-broken_x) - np.sin(rotate_rad_1)*(y-broken_y)) + broken_x
+    broken_center_y_1 = round(np.sin(rotate_rad_1)*(x-broken_x) + np.cos(rotate_rad_1)*(y-broken_y)) + broken_y
+    # print("broken center1:", broken_center_x_1, broken_center_y_1)
+    # print("start angle:", (-rand_angle-rotate_rad_1) * 180/np.pi, ", end angle:", (np.pi-rand_angle-rotate_rad_1) * 180/np.pi)
+    
+    
+    rotate_rad_2 = -1 * rotate_rad_1
+    broken_center_x_2 = round(np.cos(rotate_rad_2)*(x-broken_x) - np.sin(rotate_rad_2)*(y-broken_y)) + broken_x
+    broken_center_y_2 = round(np.sin(rotate_rad_2)*(x-broken_x) + np.cos(rotate_rad_2)*(y-broken_y)) + broken_y
+    # print("broken center2:", broken_center_x_2, broken_center_y_2)
+    # print("start angle:", (np.pi-rand_angle-rotate_rad_2) * 180/np.pi, ", end angle:",(2*np.pi-rand_angle-rotate_rad_2) * 180/np.pi)
 
-    rotate_rad *= -1
-    broken_center_x_2 = round(np.cos(rotate_rad)*(x-broken_x) - np.sin(rotate_rad)*(y-broken_y)) + broken_x
-    broken_center_y_2 = round(np.sin(rotate_rad)*(x-broken_x) + np.cos(rotate_rad)*(y-broken_y)) + broken_y
+
+
 
     return (
-        color,
-        (broken_center_x_1-r, broken_center_y_1-r, 2*r,2*r),\
-            2*np.pi-rand_angle-rotate_rad,np.pi-rand_angle-rotate_rad, int(r), \
-        (broken_center_x_2-r, broken_center_y_2-r, 2*r,2*r), \
-            2*np.pi-rand_angle-rotate_rad,np.pi-rand_angle-rotate_rad, int(r)
+        color, int(r), \
+        (broken_center_x_1, broken_center_y_1), \
+            -rand_angle-rotate_rad_1,np.pi-rand_angle-rotate_rad_1,   \
+        (broken_center_x_2, broken_center_y_2), \
+            np.pi-rand_angle-rotate_rad_2, 2*np.pi-rand_angle-rotate_rad_2, 
     )
-    pygame.draw.arc(SCREEN, color, [broken_center_x_1-r, broken_center_y_1-r, 2*r,2*r],2*np.pi-rand_angle-rotate_rad,np.pi-rand_angle-rotate_rad, int(r))
-    pygame.draw.arc(SCREEN, color, [broken_center_x_2-r, broken_center_y_2-r, 2*r,2*r],2*np.pi-rand_angle-rotate_rad,np.pi-rand_angle-rotate_rad, int(r))
     
 
 
@@ -387,14 +413,14 @@ def play(difficulty,cont_game=False):
             return
         
         if break_event:
-            color, rect1, a1, a1e, r, rect2, a2, a2e, _ = broken_circle_info_1
-            pygame.draw.arc(SCREEN, color, rect1, a1, a1e, r)
-            pygame.draw.arc(SCREEN, color, rect2, a2, a2e, r)
-            color, rect1, a1, a1e, r, rect2, a2, a2e, _ = broken_circle_info_2
-            pygame.draw.arc(SCREEN, color, rect1, a1, a1e, r)
-            pygame.draw.arc(SCREEN, color, rect2, a2, a2e, r)
+            color, radius, center_coord1, theta1, end_theta1, center_coord2, theta2, end_theta2 = broken_circle_info_1
+            fill_arc(color, center_coord1, radius, theta1, end_theta1, break_time)
+            fill_arc(color, center_coord2, radius, theta2, end_theta2, break_time)
+            color, radius, center_coord1, theta1, end_theta1, center_coord2, theta2, end_theta2 = broken_circle_info_2
+            fill_arc(color, center_coord1, radius, theta1, end_theta1, break_time)
+            fill_arc(color, center_coord2, radius, theta2, end_theta2, break_time)
             break_time += 1
-            if break_time == 1900:
+            if break_time == 30:
                 break_time = 0
                 break_event = False
         
@@ -449,7 +475,7 @@ def play(difficulty,cont_game=False):
                 remained_undo -= 1
                 break_board = continue_boards[-1] - continue_boards[-3]
                 break_pieces = np.transpose(np.nonzero(break_board))
-                print(break_pieces)
+                # print(break_pieces)
                 continue_boards = continue_boards[:-2]
                 board = continue_boards[-1]
                 next_board = continue_boards[-1]
@@ -1363,7 +1389,6 @@ collision_check(A_rect, B_rect)
 # player_Rect.centerx = round(SCREEN_WIDTH / 2)
 # player_Rect.centery = round(SCREEN_HEIGHT / 2)
 
-dx, dy = 0, 0
 # 화면 업데이트
 # pygame.display.update()
 # pygame.display.filp()

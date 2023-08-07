@@ -57,7 +57,7 @@ fail_sound = (pygame.mixer.Sound('files/sound/lose_sound.mp3'), 0.7, 1)
 button_sound = (pygame.mixer.Sound('files/sound/button_sound.mp3'), 0.3, 1)
 
 # from https://pixabay.com/ko/sound-effects/search/pop/
-undo_sound = (pygame.mixer.Sound('files/sound/undo_sound.mp3'), 1, 1)
+undo_sound = (pygame.mixer.Sound('files/sound/undo_sound.mp3'), 0.5, 1)
 
 
 # from https://pixabay.com/ko/sound-effects/search/xylophone/
