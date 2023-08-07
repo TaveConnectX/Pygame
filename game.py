@@ -457,8 +457,10 @@ def play(difficulty,cont_game=False):
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
+                x,y = pygame.mouse.get_pos()
                 if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
-                x,_ = pygame.mouse.get_pos()
+                if not is_valid_x(SCREEN, x, y, undo_button): continue
+                
                 col = x2col(SCREEN, x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 block_event = True
@@ -485,7 +487,7 @@ def play(difficulty,cont_game=False):
             game_sound[0].stop()
             return
         
-        if undo_action and not block_event:
+        if undo_action and not block_event and not break_event:
             if remained_undo==0 or len(continue_boards)<=2: pass
             else:
                 remained_undo -= 1
