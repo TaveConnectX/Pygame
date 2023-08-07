@@ -261,9 +261,9 @@ def no_board_to_continue():
     run = True
     event = None
     go_back = False
-    SCREEN.fill(WHITE)
+    
     while run:
-        
+        SCREEN.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -802,9 +802,9 @@ def no_board_to_review():
     run = True
     event = None
     go_back = False
-    SCREEN.fill(WHITE)
+    
     while run:
-        
+        SCREEN.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -991,8 +991,9 @@ def info():
     # 선택하면 play()    
     run = True
     event = None
-    SCREEN.fill((255,255,255))
+    
     while run:
+        SCREEN.fill((255,255,255))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
