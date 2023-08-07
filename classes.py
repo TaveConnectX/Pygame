@@ -59,6 +59,9 @@ button_sound = (pygame.mixer.Sound('files/sound/button_sound.mp3'), 0.3, 1)
 # from https://pixabay.com/ko/sound-effects/search/pop/
 undo_sound = (pygame.mixer.Sound('files/sound/undo_sound.mp3'), 0.5, 1)
 
+# from https://pixabay.com/ko/sound-effects/search/boop/
+
+select_color_sound = (pygame.mixer.Sound('files/sound/select_color_sound.mp3'), 0.7, 1)
 
 # from https://pixabay.com/ko/sound-effects/search/xylophone/
 do = (pygame.mixer.Sound('files/sound/xylophone_do.mp3'), 1, 1)

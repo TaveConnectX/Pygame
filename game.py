@@ -261,9 +261,9 @@ def no_board_to_continue():
     run = True
     event = None
     go_back = False
-    SCREEN.fill(WHITE)
+    
     while run:
-        
+        SCREEN.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -381,9 +381,15 @@ def play(difficulty,cont_game=False):
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
         remained_undo = 3 
-
     undo_button = Button('undo  {}'.format(remained_undo),SCREEN.get_width()-97,500,100,50, font_size=20)
-    
+
+    border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
+    font = pygame.font.Font('files/font/main_font.ttf', 20)
+    text = font.render(difficulty, True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+
     block_event = False
     run = True
     event = None
@@ -391,10 +397,20 @@ def play(difficulty,cont_game=False):
     x, y = 50,100
     clicked_x, clicked_y = 0,0
     falling_piece = FallingInfo()
+    
     SCREEN.fill(WHITE)
+    for i in range(len(board)):
+        for j in range(len(board[0])):
+            if board[i][j] != 0:
+                pos = coord2pos(SCREEN, (i,j))
+                draw_circle_with_pos(pos, player=board[i][j])
+    go_back = back_button.draw_and_get_event(SCREEN, event)
+    undo_action = undo_button.draw_and_get_event(SCREEN, event)
+    SCREEN.blit(text, text_rect)
     draw_table(SCREEN)
     draw_cursor(x,player)
     pygame.display.flip()
+    
     background_sound[0].set_volume(0)
     play_sound(game_sound, repeat=True, custom_volume=1)
     next_board = copy.deepcopy(board)
@@ -408,7 +424,7 @@ def play(difficulty,cont_game=False):
             print("for review")
             game_sound[0].stop()
             save_review(continue_boards,2//player, difficulty)
-            end(board, win_info[0], win_info[1:], difficulty)
+            end(board, win_info[0], win_info[1:], difficulty,remained_undo)
             
             return
         
@@ -441,8 +457,10 @@ def play(difficulty,cont_game=False):
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
+                x,y = pygame.mouse.get_pos()
                 if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
-                x,_ = pygame.mouse.get_pos()
+                if not is_valid_x(SCREEN, x, y, undo_button): continue
+                
                 col = x2col(SCREEN, x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 block_event = True
@@ -469,7 +487,7 @@ def play(difficulty,cont_game=False):
             game_sound[0].stop()
             return
         
-        if undo_action and not block_event:
+        if undo_action and not block_event and not break_event:
             if remained_undo==0 or len(continue_boards)<=2: pass
             else:
                 remained_undo -= 1
@@ -499,6 +517,7 @@ def play(difficulty,cont_game=False):
         draw_table(SCREEN)
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
+        SCREEN.blit(text, text_rect)
         clock.tick(frame)
         pygame.display.flip()
 
@@ -543,7 +562,7 @@ def show_connect4(board, player, coords):
 
 
 
-def end(board, player, coords, difficulty):
+def end(board, player, coords, difficulty, remained_undo):
     save_continue([],None, None, None)
     show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
@@ -563,7 +582,8 @@ def end(board, player, coords, difficulty):
         record[difficulty][1] += 1
         play_sound(draw_sound, repeat=False, custom_volume=1)
 
-    save_record(record)
+    if remained_undo<=3:
+        save_record(record)
     print("record:",record)
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
@@ -782,9 +802,9 @@ def no_board_to_review():
     run = True
     event = None
     go_back = False
-    SCREEN.fill(WHITE)
+    
     while run:
-        
+        SCREEN.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
@@ -811,6 +831,7 @@ def review():
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    continue_button = Button('play from here (연습 모드)',w-172,500,250,50, font_size=20)
     font = pygame.font.Font('files/font/main_font.ttf', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -818,6 +839,12 @@ def review():
     text = font.render(text_content, True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
+
+    diff_border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
+    font = pygame.font.Font('files/font/main_font.ttf', 20)
+    diff_text = font.render(difficulty, True, BLACK)
+    diff_text_rect = diff_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    diff_text_rect.center = diff_border.center
 
 
     
@@ -827,7 +854,8 @@ def review():
     last_board = review_boards[-1]
     _, *last_coords = is_win(last_board, player)
 
-    go_back, go_prev, go_next, show_recommend= False, False, False, False
+    go_back, go_prev, go_next, show_recommend = False, False, False, False
+    continue_action = False
     coord_recommend = (None, None)
     SCREEN.fill(WHITE)
     draw_table(SCREEN)
@@ -842,24 +870,26 @@ def review():
             
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        if idx != 0:
-            go_prev = previous_button.draw_and_get_event(SCREEN, event)
-        if idx != len(review_boards)-1:
-            go_next = next_button.draw_and_get_event(SCREEN, event)
+        go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        go_next = next_button.draw_and_get_event(SCREEN, event)
         if (idx+fp)%2 and idx!=len(review_boards)-1:
             show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
+        if idx!=len(review_boards)-1:
+            continue_action = continue_button.draw_and_get_event(SCREEN, event)
+
+
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
             return
         if go_prev:
             play_sound(button_sound, repeat=False, custom_volume=1)
-            idx = idx-1 if idx>=1 else idx
+            idx = idx-1 if idx>=1 else len(review_boards)-1
             go_prev = False
             coord_recommend = (None, None)
         if go_next:
             play_sound(button_sound, repeat=False, custom_volume=1)
-            idx = idx+1 if idx<len(review_boards)-1 else idx 
+            idx = idx+1 if idx<len(review_boards)-1 else 0
             go_next = False
             coord_recommend = (None, None)
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
@@ -881,6 +911,26 @@ def review():
         if coord_recommend != (None, None):
             draw_circle_with_pos(coord_recommend,player=3)
 
+
+        if continue_action:
+            play_sound(button_sound, repeat=False, custom_volume=1)
+            if coord_recommend != (None, None): 
+                continue_boards = copy.deepcopy(review_boards[:idx+1])
+                tmp_board = copy.deepcopy(continue_boards[-1])
+                tmp_board[row][col] = 1
+                continue_boards.append(tmp_board)
+                print(continue_boards)
+                player = 2
+            
+            else:
+                continue_boards = copy.deepcopy(review_boards[:idx+1])
+                player = 1 if (idx+fp)%2 else 2
+            remained_undo = 99
+            save_continue(continue_boards, player, difficulty, remained_undo)
+            play(None, cont_game=True)
+            return 
+        
+
         for i in range(len(review_boards[idx])):
             for j in range(len(review_boards[idx][0])):
                 if review_boards[idx][i][j] != 0:
@@ -894,6 +944,7 @@ def review():
         text_content = "{} / {}".format(idx, len(review_boards)-1)
         text = font.render(text_content, True, BLACK)
         SCREEN.blit(text, text_rect)
+        SCREEN.blit(diff_text, diff_text_rect)
         pygame.display.flip()
 
 
@@ -940,8 +991,9 @@ def info():
     # 선택하면 play()    
     run = True
     event = None
-    SCREEN.fill((255,255,255))
+    
     while run:
+        SCREEN.fill((255,255,255))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -1119,7 +1171,8 @@ def p1_color_setting():
     global P1COLOR
 
     back_button = Button('<',25,25,50,50)
-    go_back = False
+    random_button = Button('random',w-97,500,100,50, font_size=20)
+    go_back, random_action = False, False
     # 선택하면 play()    
     run = True
     event = None
@@ -1134,22 +1187,29 @@ def p1_color_setting():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mousepressed = True
-            if event.type == pygame.MOUSEBUTTONUP:
+                r,g,b,_ = color
+                if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
+                    mousepressed = True
+            if event.type == pygame.MOUSEBUTTONUP and mousepressed:
                 mousepressed = False
-        if mousepressed:
-            SCREEN.set_at(pygame.mouse.get_pos(),color)
-            r,g,b,_ = color
-            if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255):
-                P1COLOR = (r,g,b)
-            print(color)
+                r2,g2,b2,_ = color
+                if (r,g,b) == (r2,g2,b2):
+                    select_color_sound[0].stop()
+                    P1COLOR = (r,g,b)
+                    play_sound(select_color_sound)
+            # print(color)
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        
+        random_action = random_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
             return
+        if random_action:
+            select_color_sound[0].stop()
+            r,g,b = np.random.randint(256,size=3)
+            P1COLOR = (r,g,b)
+            play_sound(select_color_sound)
         for idx in range(42):
             row, col = idx//7, idx%7
             x,y = coord2pos(SCREEN, (row,col))
@@ -1168,7 +1228,8 @@ def p2_color_setting():
     global P2COLOR
 
     back_button = Button('<',25,25,50,50)
-    go_back = False
+    random_button = Button('random',w-97,500,100,50, font_size=20)
+    go_back, random_action = False, False
     # 선택하면 play()    
     run = True
     event = None
@@ -1183,22 +1244,28 @@ def p2_color_setting():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mousepressed = True
-            if event.type == pygame.MOUSEBUTTONUP:
+                r,g,b,_ = color
+                if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
+                    mousepressed = True
+            if event.type == pygame.MOUSEBUTTONUP and mousepressed:
                 mousepressed = False
-        if mousepressed:
-            SCREEN.set_at(pygame.mouse.get_pos(),color)
-            r,g,b,_ = color
-            if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255):
-                P2COLOR = (r,g,b)
-            print(color)
+                r2,g2,b2,_ = color
+                if (r,g,b) == (r2,g2,b2):
+                    select_color_sound[0].stop()
+                    P2COLOR = (r,g,b)
+                    play_sound(select_color_sound)
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        
+        random_action = random_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
             return
+        if random_action:
+            select_color_sound[0].stop()
+            r,g,b = np.random.randint(256,size=3)
+            P2COLOR = (r,g,b)
+            play_sound(select_color_sound)
         for idx in range(42):
             row, col = idx//7, idx%7
             x,y = coord2pos(SCREEN, (row,col))
