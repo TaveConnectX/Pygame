@@ -397,10 +397,20 @@ def play(difficulty,cont_game=False):
     x, y = 50,100
     clicked_x, clicked_y = 0,0
     falling_piece = FallingInfo()
+    
     SCREEN.fill(WHITE)
+    for i in range(len(board)):
+        for j in range(len(board[0])):
+            if board[i][j] != 0:
+                pos = coord2pos(SCREEN, (i,j))
+                draw_circle_with_pos(pos, player=board[i][j])
+    go_back = back_button.draw_and_get_event(SCREEN, event)
+    undo_action = undo_button.draw_and_get_event(SCREEN, event)
+    SCREEN.blit(text, text_rect)
     draw_table(SCREEN)
     draw_cursor(x,player)
     pygame.display.flip()
+    
     background_sound[0].set_volume(0)
     play_sound(game_sound, repeat=True, custom_volume=1)
     next_board = copy.deepcopy(board)
@@ -414,7 +424,7 @@ def play(difficulty,cont_game=False):
             print("for review")
             game_sound[0].stop()
             save_review(continue_boards,2//player, difficulty)
-            end(board, win_info[0], win_info[1:], difficulty)
+            end(board, win_info[0], win_info[1:], difficulty,remained_undo)
             
             return
         
@@ -433,8 +443,7 @@ def play(difficulty,cont_game=False):
         
         if player == 2 and not block_event:
             block_event = True
-            if len(continue_boards)==1: col = 3
-            else: col = test_main(board, player,difficulty)
+            col = test_main(board, player,difficulty)
             next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
             if is_valid: 
                 continue_boards.append(copy.deepcopy(next_board))
@@ -551,7 +560,7 @@ def show_connect4(board, player, coords):
 
 
 
-def end(board, player, coords, difficulty):
+def end(board, player, coords, difficulty, remained_undo):
     save_continue([],None, None, None)
     show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
@@ -571,7 +580,8 @@ def end(board, player, coords, difficulty):
         record[difficulty][1] += 1
         play_sound(draw_sound, repeat=False, custom_volume=1)
 
-    save_record(record)
+    if remained_undo<=3:
+        save_record(record)
     print("record:",record)
     back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
 
@@ -818,7 +828,8 @@ def review():
     back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    recommend_button = Button('만약 AI라면...',cx=w/4,cy=h*3/4+100,width=w/2,height=100)
+    continue_button = Button('play from here',cx=w/4*3,cy=h*3/4+100,width=w/2,height=100)
     font = pygame.font.Font('files/font/main_font.ttf', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -835,7 +846,8 @@ def review():
     last_board = review_boards[-1]
     _, *last_coords = is_win(last_board, player)
 
-    go_back, go_prev, go_next, show_recommend= False, False, False, False
+    go_back, go_prev, go_next, show_recommend = False, False, False, False
+    continue_action = False
     coord_recommend = (None, None)
     SCREEN.fill(WHITE)
     draw_table(SCREEN)
@@ -856,6 +868,10 @@ def review():
             go_next = next_button.draw_and_get_event(SCREEN, event)
         if (idx+fp)%2 and idx!=len(review_boards)-1:
             show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
+        if idx!=len(review_boards)-1:
+            continue_action = continue_button.draw_and_get_event(SCREEN, event)
+
+
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
@@ -888,6 +904,26 @@ def review():
         
         if coord_recommend != (None, None):
             draw_circle_with_pos(coord_recommend,player=3)
+
+
+        if continue_action:
+            play_sound(button_sound, repeat=False, custom_volume=1)
+            if coord_recommend != (None, None): 
+                continue_boards = copy.deepcopy(review_boards[:idx+1])
+                tmp_board = copy.deepcopy(continue_boards[-1])
+                tmp_board[row][col] = 1
+                continue_boards.append(tmp_board)
+                print(continue_boards)
+                player = 2
+            
+            else:
+                continue_boards = copy.deepcopy(review_boards[:idx+1])
+                player = 1 if (idx+fp)%2 else 2
+            remained_undo = 99
+            save_continue(continue_boards, player, difficulty, remained_undo)
+            play(None, cont_game=True)
+            return 
+        
 
         for i in range(len(review_boards[idx])):
             for j in range(len(review_boards[idx][0])):
