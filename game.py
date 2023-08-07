@@ -1163,7 +1163,8 @@ def p1_color_setting():
     global P1COLOR
 
     back_button = Button('<',25,25,50,50)
-    go_back = False
+    random_button = Button('random',w-97,500,100,50, font_size=20)
+    go_back, random_action = False, False
     # 선택하면 play()    
     run = True
     event = None
@@ -1178,22 +1179,29 @@ def p1_color_setting():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mousepressed = True
-            if event.type == pygame.MOUSEBUTTONUP:
+                r,g,b,_ = color
+                if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
+                    mousepressed = True
+            if event.type == pygame.MOUSEBUTTONUP and mousepressed:
                 mousepressed = False
-        if mousepressed:
-            SCREEN.set_at(pygame.mouse.get_pos(),color)
-            r,g,b,_ = color
-            if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255):
-                P1COLOR = (r,g,b)
-            print(color)
+                r2,g2,b2,_ = color
+                if (r,g,b) == (r2,g2,b2):
+                    select_color_sound[0].stop()
+                    P1COLOR = (r,g,b)
+                    play_sound(select_color_sound)
+            # print(color)
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        
+        random_action = random_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
             return
+        if random_action:
+            select_color_sound[0].stop()
+            r,g,b = np.random.randint(256,size=3)
+            P1COLOR = (r,g,b)
+            play_sound(select_color_sound)
         for idx in range(42):
             row, col = idx//7, idx%7
             x,y = coord2pos(SCREEN, (row,col))
@@ -1212,7 +1220,8 @@ def p2_color_setting():
     global P2COLOR
 
     back_button = Button('<',25,25,50,50)
-    go_back = False
+    random_button = Button('random',w-97,500,100,50, font_size=20)
+    go_back, random_action = False, False
     # 선택하면 play()    
     run = True
     event = None
@@ -1227,22 +1236,28 @@ def p2_color_setting():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mousepressed = True
-            if event.type == pygame.MOUSEBUTTONUP:
+                r,g,b,_ = color
+                if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
+                    mousepressed = True
+            if event.type == pygame.MOUSEBUTTONUP and mousepressed:
                 mousepressed = False
-        if mousepressed:
-            SCREEN.set_at(pygame.mouse.get_pos(),color)
-            r,g,b,_ = color
-            if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255):
-                P2COLOR = (r,g,b)
-            print(color)
+                r2,g2,b2,_ = color
+                if (r,g,b) == (r2,g2,b2):
+                    select_color_sound[0].stop()
+                    P2COLOR = (r,g,b)
+                    play_sound(select_color_sound)
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        
+        random_action = random_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
             return
+        if random_action:
+            select_color_sound[0].stop()
+            r,g,b = np.random.randint(256,size=3)
+            P2COLOR = (r,g,b)
+            play_sound(select_color_sound)
         for idx in range(42):
             row, col = idx//7, idx%7
             x,y = coord2pos(SCREEN, (row,col))
