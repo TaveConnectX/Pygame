@@ -70,7 +70,7 @@ def load_setting():
         init_setting = {
             'first_player':3,
             'p1_color':(255,0,0),
-            'p2_color':(255,255,0),
+            'p2_color':(255,228,0),
             'music':1,
             'effect':1
         }
