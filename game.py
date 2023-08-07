@@ -870,10 +870,8 @@ def review():
             
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
-        if idx != 0:
-            go_prev = previous_button.draw_and_get_event(SCREEN, event)
-        if idx != len(review_boards)-1:
-            go_next = next_button.draw_and_get_event(SCREEN, event)
+        go_prev = previous_button.draw_and_get_event(SCREEN, event)
+        go_next = next_button.draw_and_get_event(SCREEN, event)
         if (idx+fp)%2 and idx!=len(review_boards)-1:
             show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
         if idx!=len(review_boards)-1:
@@ -886,12 +884,12 @@ def review():
             return
         if go_prev:
             play_sound(button_sound, repeat=False, custom_volume=1)
-            idx = idx-1 if idx>=1 else idx
+            idx = idx-1 if idx>=1 else len(review_boards)-1
             go_prev = False
             coord_recommend = (None, None)
         if go_next:
             play_sound(button_sound, repeat=False, custom_volume=1)
-            idx = idx+1 if idx<len(review_boards)-1 else idx 
+            idx = idx+1 if idx<len(review_boards)-1 else 0
             go_next = False
             coord_recommend = (None, None)
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
