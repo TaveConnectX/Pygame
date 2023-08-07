@@ -828,8 +828,8 @@ def review():
     back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    recommend_button = Button('만약 AI라면...',cx=w/4,cy=h*3/4+100,width=w/2,height=100)
-    continue_button = Button('play from here',cx=w/4*3,cy=h*3/4+100,width=w/2,height=100)
+    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    continue_button = Button('play from here (연습 모드)',w-172,500,250,50, font_size=20)
     font = pygame.font.Font('files/font/main_font.ttf', 30)
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -837,6 +837,12 @@ def review():
     text = font.render(text_content, True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
+
+    diff_border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
+    font = pygame.font.Font('files/font/main_font.ttf', 20)
+    diff_text = font.render(difficulty, True, BLACK)
+    diff_text_rect = diff_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    diff_text_rect.center = diff_border.center
 
 
     
@@ -938,6 +944,7 @@ def review():
         text_content = "{} / {}".format(idx, len(review_boards)-1)
         text = font.render(text_content, True, BLACK)
         SCREEN.blit(text, text_rect)
+        SCREEN.blit(diff_text, diff_text_rect)
         pygame.display.flip()
 
 
