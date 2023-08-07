@@ -381,9 +381,15 @@ def play(difficulty,cont_game=False):
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
         remained_undo = 3 
-
     undo_button = Button('undo  {}'.format(remained_undo),SCREEN.get_width()-97,500,100,50, font_size=20)
-    
+
+    border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
+    font = pygame.font.Font('files/font/main_font.ttf', 20)
+    text = font.render(difficulty, True, BLACK)
+    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    text_rect.center = border.center
+
+
     block_event = False
     run = True
     event = None
@@ -427,7 +433,8 @@ def play(difficulty,cont_game=False):
         
         if player == 2 and not block_event:
             block_event = True
-            col = test_main(board, player,difficulty)
+            if len(continue_boards)==1: col = 3
+            else: col = test_main(board, player,difficulty)
             next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
             if is_valid: 
                 continue_boards.append(copy.deepcopy(next_board))
@@ -499,6 +506,7 @@ def play(difficulty,cont_game=False):
         draw_table(SCREEN)
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
+        SCREEN.blit(text, text_rect)
         clock.tick(frame)
         pygame.display.flip()
 
