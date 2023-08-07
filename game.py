@@ -1,4 +1,5 @@
 import pygame
+import pygame.gfxdraw
 import sys
 import numpy as np
 import os
@@ -7,7 +8,6 @@ import pickle
 from classes import *
 from test_model import test_main
 from functions import *
-
 
 
 
@@ -46,15 +46,15 @@ class FallingInfo:
         self.bounce = 0  # 돌이 튀어오른 수
         
     # target 좌표를 이용해서 변수들을 초기화 
-    def set_pos(self, target_cord):
+    def set_pos(self, target_coord):
         self.bounce = 0
         self.v = 0
-        target_row, target_col = target_cord
-        self.target_pos = cord2pos(SCREEN,(target_row,target_col))
+        target_row, target_col = target_coord
+        self.target_pos = coord2pos(SCREEN,(target_row,target_col))
         # 바닥은 (5,col) 보다 낮은 (6,col)
         # 떨어지기 시작하는 위치는 (0,col) 보다 높은 (-1, col) 로 설정 
-        self.base_pos = cord2pos(SCREEN,(6,target_col))  
-        self.pos = cord2pos(SCREEN,(-1,target_col))  
+        self.base_pos = coord2pos(SCREEN,(6,target_col))  
+        self.pos = coord2pos(SCREEN,(-1,target_col))  
 
     def calculate_info(self):
         self.v += self.g
@@ -300,17 +300,75 @@ def draw_circle_with_pos(pos,player):
         pygame.draw.circle(SCREEN,WHITE,pos,r*0.8)
 
 
+def fill_arc(color, center, radius, theta0, theta1, break_time, ndiv=50):
+    x0, y0 = center
+
+    dtheta = (theta1 - theta0) / ndiv
+    angles = [theta0 + i*dtheta for i in range(ndiv + 1)] 
+
+    points = [(x0, y0)] + [(x0 + radius * np.cos(theta), y0 - radius * np.sin(theta)) for theta in angles]
+
+    r,g,b = color
+    color = (r+(255-r)/30*break_time,g+(255-g)/30*break_time,b+(255-b)/30*break_time)
+    pygame.gfxdraw.filled_polygon(SCREEN, points, color)
+
+
+def get_broken_circle_info_with_coord(coord, player):
+    w,h = SCREEN.get_size()
+    r = (w-100)/7/2/1.05
+    if player==1: color=P1COLOR
+    elif player==2: color=P2COLOR
+    else:
+        color = None
+
+    rand_angle = np.random.uniform(0, 2*np.pi)
+    x,y = coord2pos(SCREEN,coord)
+    broken_x, broken_y = x+r*np.cos(rand_angle), y+r*np.sin(rand_angle)
+    # print("check broken")
+    # print("r:",r)
+    # print("x:",x,", broken x:", broken_x)
+    # print("y:",y, ", broken y:",broken_y)
+
+    rotate_rad_1 = np.random.uniform(15, 35) * (np.pi / 180.0)
+    broken_center_x_1 = round(np.cos(rotate_rad_1)*(x-broken_x) - np.sin(rotate_rad_1)*(y-broken_y)) + broken_x
+    broken_center_y_1 = round(np.sin(rotate_rad_1)*(x-broken_x) + np.cos(rotate_rad_1)*(y-broken_y)) + broken_y
+    # print("broken center1:", broken_center_x_1, broken_center_y_1)
+    # print("start angle:", (-rand_angle-rotate_rad_1) * 180/np.pi, ", end angle:", (np.pi-rand_angle-rotate_rad_1) * 180/np.pi)
+    
+    
+    rotate_rad_2 = -1 * rotate_rad_1
+    broken_center_x_2 = round(np.cos(rotate_rad_2)*(x-broken_x) - np.sin(rotate_rad_2)*(y-broken_y)) + broken_x
+    broken_center_y_2 = round(np.sin(rotate_rad_2)*(x-broken_x) + np.cos(rotate_rad_2)*(y-broken_y)) + broken_y
+    # print("broken center2:", broken_center_x_2, broken_center_y_2)
+    # print("start angle:", (np.pi-rand_angle-rotate_rad_2) * 180/np.pi, ", end angle:",(2*np.pi-rand_angle-rotate_rad_2) * 180/np.pi)
+
+
+
+
+    return (
+        color, int(r), \
+        (broken_center_x_1, broken_center_y_1), \
+            -rand_angle-rotate_rad_1,np.pi-rand_angle-rotate_rad_1,   \
+        (broken_center_x_2, broken_center_y_2), \
+            np.pi-rand_angle-rotate_rad_2, 2*np.pi-rand_angle-rotate_rad_2, 
+    )
+    
+
+
+
+
 def play(difficulty,cont_game=False):
     print('play')
     if FIRST_PLAYER == 3:
         player = np.random.choice([1,2])
     else: player = FIRST_PLAYER
     back_button = Button('<',25,25,50,50)
+    
     go_back = False
     if cont_game:
         load_infos = load_continue()
         if load_infos: 
-            boards, player, difficulty = load_infos
+            boards, player, difficulty, remained_undo = load_infos
             board = boards[-1]
             # 이어하기를 위한 보드 초기화
             continue_boards = copy.deepcopy(boards)
@@ -322,11 +380,14 @@ def play(difficulty,cont_game=False):
         # board = [[np.random.choice([1, 2]) for _ in range(7)] for _ in range(6)]
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
+        remained_undo = 3 
 
+    undo_button = Button('undo  {}'.format(remained_undo),SCREEN.get_width()-97,500,100,50, font_size=20)
     
     block_event = False
     run = True
     event = None
+    break_event, break_time = False, 0
     x, y = 50,100
     clicked_x, clicked_y = 0,0
     falling_piece = FallingInfo()
@@ -351,6 +412,18 @@ def play(difficulty,cont_game=False):
             
             return
         
+        if break_event:
+            color, radius, center_coord1, theta1, end_theta1, center_coord2, theta2, end_theta2 = broken_circle_info_1
+            fill_arc(color, center_coord1, radius, theta1, end_theta1, break_time)
+            fill_arc(color, center_coord2, radius, theta2, end_theta2, break_time)
+            color, radius, center_coord1, theta1, end_theta1, center_coord2, theta2, end_theta2 = broken_circle_info_2
+            fill_arc(color, center_coord1, radius, theta1, end_theta1, break_time)
+            fill_arc(color, center_coord2, radius, theta2, end_theta2, break_time)
+            break_time += 1
+            if break_time == 30:
+                break_time = 0
+                break_event = False
+        
         
         if player == 2 and not block_event:
             block_event = True
@@ -368,7 +441,7 @@ def play(difficulty,cont_game=False):
                 clicked_x, clicked_y = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
-                if not is_valid_x(SCREEN, clicked_x): continue
+                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
                 x,_ = pygame.mouse.get_pos()
                 col = x2col(SCREEN, x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
@@ -383,17 +456,37 @@ def play(difficulty,cont_game=False):
             
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
-                save_continue(continue_boards, player,difficulty)
+                save_continue(continue_boards, player,difficulty, remained_undo)
                 game_sound[0].stop()
                 run = False
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
+        undo_action = undo_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
-            save_continue(continue_boards, player,difficulty)
+            save_continue(continue_boards, player,difficulty, remained_undo)
             SCREEN.fill(WHITE)
             game_sound[0].stop()
             return
+        
+        if undo_action and not block_event:
+            if remained_undo==0 or len(continue_boards)<=2: pass
+            else:
+                remained_undo -= 1
+                break_board = continue_boards[-1] - continue_boards[-3]
+                break_pieces = np.transpose(np.nonzero(break_board))
+                # print(break_pieces)
+                continue_boards = continue_boards[:-2]
+                board = continue_boards[-1]
+                next_board = continue_boards[-1]
+                undo_button.name = 'undo  {}'.format(remained_undo)
+                break_event = True
+
+                i,j=break_pieces[0]
+                broken_circle_info_1 = get_broken_circle_info_with_coord((i,j), break_board[i,j])
+                i,j= break_pieces[1]
+                broken_circle_info_2 = get_broken_circle_info_with_coord((i,j), break_board[i,j])
+                play_sound(undo_sound)
         
         if not falling_piece.stopped():
             falling_piece.calculate_info()
@@ -401,7 +494,7 @@ def play(difficulty,cont_game=False):
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
         draw_table(SCREEN)
         if player==1: draw_cursor(x,player)
@@ -428,12 +521,12 @@ def show_connect4(board, player, coords):
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
         
         # coords[:n]까지 그리기
         for i in range(n):
-            pos = cord2pos(SCREEN, coords[i])
+            pos = coord2pos(SCREEN, coords[i])
             draw_circle_with_pos(pos, player=-player)
         if not t%term:
             if n<=3: play_sound(connect4_sound[n], repeat=False, custom_volume=1)
@@ -451,7 +544,7 @@ def show_connect4(board, player, coords):
 
 
 def end(board, player, coords, difficulty):
-    save_continue([],None, None)
+    save_continue([],None, None, None)
     show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
 
@@ -500,11 +593,11 @@ def end(board, player, coords, difficulty):
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
 
         for i in range(4):
-            pos = cord2pos(SCREEN, coords[i])
+            pos = coord2pos(SCREEN, coords[i])
             draw_circle_with_pos(pos, player=-player)
         draw_table(SCREEN)
         
@@ -658,11 +751,11 @@ def how_to():
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
         
         for i in range(n):
-            pos = cord2pos(SCREEN, page_3_arr[i])
+            pos = coord2pos(SCREEN, page_3_arr[i])
             draw_circle_with_pos(pos, player=-2//player)
         draw_table(SCREEN)
         clock.tick(frame)
@@ -735,7 +828,7 @@ def review():
     _, *last_coords = is_win(last_board, player)
 
     go_back, go_prev, go_next, show_recommend= False, False, False, False
-    cord_recommend = (None, None)
+    coord_recommend = (None, None)
     SCREEN.fill(WHITE)
     draw_table(SCREEN)
     run = True
@@ -763,15 +856,15 @@ def review():
             play_sound(button_sound, repeat=False, custom_volume=1)
             idx = idx-1 if idx>=1 else idx
             go_prev = False
-            cord_recommend = (None, None)
+            coord_recommend = (None, None)
         if go_next:
             play_sound(button_sound, repeat=False, custom_volume=1)
             idx = idx+1 if idx<len(review_boards)-1 else idx 
             go_next = False
-            cord_recommend = (None, None)
+            coord_recommend = (None, None)
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
             play_sound(button_sound, repeat=False, custom_volume=1)
-            if cord_recommend == (None, None):
+            if coord_recommend == (None, None):
                 row = 0
                 
                 # ai 추천은 사람의 입장에서 진행 -> player=1
@@ -780,22 +873,22 @@ def review():
                     if review_boards[idx][r][col] == 0:
                         row = r
                         break
-                pos = cord2pos(SCREEN, (row,col))
-                cord_recommend = pos
+                pos = coord2pos(SCREEN, (row,col))
+                coord_recommend = pos
                 play_sound(recommend_sound, repeat=False, custom_volume=1)
                 
         
-        if cord_recommend != (None, None):
-            draw_circle_with_pos(cord_recommend,player=3)
+        if coord_recommend != (None, None):
+            draw_circle_with_pos(coord_recommend,player=3)
 
         for i in range(len(review_boards[idx])):
             for j in range(len(review_boards[idx][0])):
                 if review_boards[idx][i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
         if idx == len(review_boards)-1:
             for coord in last_coords:
-                pos = cord2pos(SCREEN, coord)
+                pos = coord2pos(SCREEN, coord)
                 draw_circle_with_pos(pos, player=-player)
         draw_table(SCREEN)
         text_content = "{} / {}".format(idx, len(review_boards)-1)
@@ -1059,7 +1152,7 @@ def p1_color_setting():
             return
         for idx in range(42):
             row, col = idx//7, idx%7
-            x,y = cord2pos(SCREEN, (row,col))
+            x,y = coord2pos(SCREEN, (row,col))
             x += 0.5
             y += 0.5
             pygame.draw.circle(SCREEN,color_picker[idx],(x,y),(w-100)/7/2/1.05)
@@ -1108,7 +1201,7 @@ def p2_color_setting():
             return
         for idx in range(42):
             row, col = idx//7, idx%7
-            x,y = cord2pos(SCREEN, (row,col))
+            x,y = coord2pos(SCREEN, (row,col))
             x += 0.5
             y += 0.5
             pygame.draw.circle(SCREEN,color_picker[idx],(x,y),(w-100)/7/2/1.05)
@@ -1228,7 +1321,7 @@ def sound_setting():
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] != 0:
-                    pos = cord2pos(SCREEN, (i,j))
+                    pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
 
         draw_table(SCREEN)
@@ -1243,7 +1336,7 @@ def sound_setting():
 # SCREEN.fill( (255, 255, 255) )
 
 # 이미지를 화면에 출력 
-# SCREEN.blit(image object,  cord or Rect)
+# SCREEN.blit(image object,  coord or Rect)
 
 # 선 그리기
 # pygame.draw.line(SCREEN, color, start_pos, end_pos, width=1) -> Rect
@@ -1296,7 +1389,6 @@ collision_check(A_rect, B_rect)
 # player_Rect.centerx = round(SCREEN_WIDTH / 2)
 # player_Rect.centery = round(SCREEN_HEIGHT / 2)
 
-dx, dy = 0, 0
 # 화면 업데이트
 # pygame.display.update()
 # pygame.display.filp()
