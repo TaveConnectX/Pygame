@@ -285,8 +285,9 @@ def draw_cursor(x, player):
 def draw_circle_with_pos(pos,player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
-    if player in [1,-1]: color = P1COLOR
-    elif player in [2,-2]: color = P2COLOR
+    if abs(player) == 1: color = P1COLOR
+    elif abs(player) == 2: color = P2COLOR
+    # recommend 
     else:
         R1, G1, B1 = P1COLOR
         R2, G2, B2 = P2COLOR
@@ -402,6 +403,7 @@ def play(difficulty,cont_game=False):
 
 
     block_event = False
+    show_recommend = False
     run = True
     event = None
     break_event, break_time = False, 0
@@ -495,7 +497,9 @@ def play(difficulty,cont_game=False):
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         undo_action = undo_button.draw_and_get_event(SCREEN, event)
-        show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
+        if remained_undo >= 4: 
+            SCREEN.blit(practice_text, practice_text_rect)
+            show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             save_continue(continue_boards, player,difficulty, remained_undo)
@@ -524,7 +528,7 @@ def play(difficulty,cont_game=False):
                 play_sound(undo_sound)
 
         if show_recommend and not block_event and not break_event:
-            play_sound(button_sound, repeat=False, custom_volume=1)
+            # play_sound(button_sound, repeat=False, custom_volume=1)
             if coord_recommend == (None, None):
                 row = 0
                 
@@ -553,9 +557,7 @@ def play(difficulty,cont_game=False):
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
         SCREEN.blit(text, text_rect)
-        if remained_undo >= 4: 
-            SCREEN.blit(practice_text, practice_text_rect)
-            recommend_button.draw_and_get_event(SCREEN, event)
+        
         clock.tick(frame)
         pygame.display.flip()
 
@@ -931,7 +933,7 @@ def review():
             go_next = False
             coord_recommend = (None, None)
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
-            play_sound(button_sound, repeat=False, custom_volume=1)
+            # play_sound(button_sound, repeat=False, custom_volume=1)
             if coord_recommend == (None, None):
                 row = 0
                 
@@ -974,6 +976,8 @@ def review():
                 if review_boards[idx][i][j] != 0:
                     pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
+            
+
         if idx == len(review_boards)-1:
             for coord in last_coords:
                 pos = coord2pos(SCREEN, coord)
@@ -1031,21 +1035,21 @@ def info():
 
     easy_rate_text_content = str(calculate_win_rate(*record['easy'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    easy_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4+70,50,25))
+    easy_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4+72,50,25))
     easy_rate_text = rate_font.render(easy_rate_text_content, True, BLACK)
     easy_rate_text_rect = easy_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     easy_rate_text_rect.center = easy_rate_border.center
 
     normal_rate_text_content = str(calculate_win_rate(*record['normal'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    normal_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/2+70,50,25))
+    normal_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/2+72,50,25))
     normal_rate_text = rate_font.render(normal_rate_text_content, True, BLACK)
     normal_rate_text_rect = normal_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     normal_rate_text_rect.center = normal_rate_border.center
 
     hard_rate_text_content = str(calculate_win_rate(*record['hard'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    hard_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4*3+70,50,25))
+    hard_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4*3+72,50,25))
     hard_rate_text = rate_font.render(hard_rate_text_content, True, BLACK)
     hard_rate_text_rect = hard_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     hard_rate_text_rect.center = hard_rate_border.center
@@ -1472,6 +1476,10 @@ def sound_setting():
         draw_table(SCREEN)
         clock.tick(frame)
         pygame.display.flip()
+
+
+def ee():
+    pass
 
 # 이미지 로드
 # pygame.image.load(image_file)
