@@ -181,3 +181,13 @@ def is_win(board, player):
         player = 3
         return player, None, None, None, None
     return 0, None, None, None, None
+
+
+def calculate_win_rate(w,d,l):
+    if l==0: return 0
+    else:
+        win_rate = w/(w+d+l)*100
+        if win_rate%1==0:
+            return int(win_rate)
+        else:
+            return round(w/(w+d+l)*100, 2)

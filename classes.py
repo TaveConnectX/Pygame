@@ -71,9 +71,11 @@ high_do = (pygame.mixer.Sound('files/sound/xylophone_do2.mp3'), 1, 1)
 connect4_sound = [do, mi, sol, high_do]
 
 # main_font from https://campaign.naver.com/nanumsquare_neo/#download
+# monospace_font from https://github.com/naver/d2codingfont/releases/tag/VER1.3.2
+
 
 class Button:
-    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font_size=30):
+    def __init__(self, name, cx=0,cy=0,width=100,height=100,color=WHITE, font=None, font_size=30):
         self.name = name
         self.cx = cx
         self.cy = cy
@@ -82,7 +84,9 @@ class Button:
         self.color = color
         self.clicked = False
         self.clicked_color = LIGHTGRAY
-        self.font = pygame.font.Font('files/font/main_font.ttf', font_size)
+        if font is None:
+            self.font = pygame.font.Font('files/font/main_font.ttf', font_size)
+        else: self.font = font
         self.change_text_color()
         
 

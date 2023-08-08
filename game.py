@@ -381,7 +381,9 @@ def play(difficulty,cont_game=False):
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
         remained_undo = 3 
-    undo_button = Button('undo  {}'.format(remained_undo),SCREEN.get_width()-97,500,100,50, font_size=20)
+    undo_button = Button('undo {}'.format(str(remained_undo).rjust(2," ")),SCREEN.get_width()-97,500,100,50,\
+                         font = pygame.font.Font('files/font/monospace_font.ttf', 20)
+                         )
 
     border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
     font = pygame.font.Font('files/font/main_font.ttf', 20)
@@ -832,17 +834,17 @@ def review():
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
     continue_button = Button('play from here (연습 모드)',w-172,500,250,50, font_size=20)
-    font = pygame.font.Font('files/font/main_font.ttf', 30)
-
+    
+    font = pygame.font.Font('files/font/monospace_font.ttf', 30)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    text_content = "{} / {}".format(idx, len(review_boards)-1)
+    text_content = "{} / {}".format(str(idx).rjust(2, " "), str(len(review_boards)-1).rjust(2," "))
     text = font.render(text_content, True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
     diff_border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
-    font = pygame.font.Font('files/font/main_font.ttf', 20)
-    diff_text = font.render(difficulty, True, BLACK)
+    diff_font = pygame.font.Font('files/font/main_font.ttf', 20)
+    diff_text = diff_font.render(difficulty, True, BLACK)
     diff_text_rect = diff_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     diff_text_rect.center = diff_border.center
 
@@ -941,7 +943,7 @@ def review():
                 pos = coord2pos(SCREEN, coord)
                 draw_circle_with_pos(pos, player=-player)
         draw_table(SCREEN)
-        text_content = "{} / {}".format(idx, len(review_boards)-1)
+        text_content = "{} / {}".format(str(idx).rjust(2, " "), str(len(review_boards)-1).rjust(2," "))
         text = font.render(text_content, True, BLACK)
         SCREEN.blit(text, text_rect)
         SCREEN.blit(diff_text, diff_text_rect)
@@ -953,28 +955,64 @@ def info():
     w, h = SCREEN.get_size()
 
 
-    font = pygame.font.Font('files/font/main_font.ttf', 30)
+    font = pygame.font.Font('files/font/monospace_font.ttf', 30)
 
-    easy_text_content = "  EASY  {} / {} / {}".format(record['easy'][0],record['easy'][1],record['easy'][2])
+    easy_text_content = "EASY    {} | {} | {}".format(
+        str(record['easy'][0]).rjust(2, " "),
+        str(record['easy'][1]).rjust(2, " "),
+        str(record['easy'][2]).rjust(2, " ")
+    )
+    # print("easy len:",len(easy_text_content))
     easy_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/2/2,w/3,100))
-    
     easy_text = font.render(easy_text_content, True, BLACK)
     easy_text_rect = easy_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     easy_text_rect.center = easy_border.center
 
-    normal_text_content = "NORMAL  {} / {} / {}".format(record['normal'][0],record['normal'][1],record['normal'][2])
+
+    normal_text_content = "NORMAL  {} | {} | {}".format(
+        str(record['normal'][0]).rjust(2, " "),
+        str(record['normal'][1]).rjust(2, " "),
+        str(record['normal'][2]).rjust(2, " ")
+    )
+    # print("norm len:",len(normal_text_content))
     normal_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/2,w/3,100))
-    
     normal_text = font.render(normal_text_content, True, BLACK)
     normal_text_rect = normal_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     normal_text_rect.center = normal_border.center
 
-    hard_text_content = "  HARD  {} / {} / {}".format(record['hard'][0],record['hard'][1],record['hard'][2])
+    hard_text_content = "HARD    {} | {} | {}".format(
+        str(record['hard'][0]).rjust(2, " "),
+        str(record['hard'][1]).rjust(2, " "),
+        str(record['hard'][2]).rjust(2, " ")
+    )
+    # print("hard len:",len(hard_text_content))
     hard_border = pygame.draw.rect(SCREEN, WHITE, (w/3,h/4*3,w/3,100))
-    
     hard_text = font.render(hard_text_content, True, BLACK)
     hard_text_rect = hard_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     hard_text_rect.center = hard_border.center
+
+    rate_font = pygame.font.Font('files/font/monospace_font.ttf', 20)
+
+    easy_rate_text_content = str(calculate_win_rate(*record['easy'])).rjust(4, " ") + "%"
+    # print("easy len:",len(easy_text_content))
+    easy_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4+70,50,25))
+    easy_rate_text = rate_font.render(easy_rate_text_content, True, BLACK)
+    easy_rate_text_rect = easy_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    easy_rate_text_rect.center = easy_rate_border.center
+
+    normal_rate_text_content = str(calculate_win_rate(*record['normal'])).rjust(4, " ") + "%"
+    # print("easy len:",len(easy_text_content))
+    normal_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/2+70,50,25))
+    normal_rate_text = rate_font.render(normal_rate_text_content, True, BLACK)
+    normal_rate_text_rect = normal_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    normal_rate_text_rect.center = normal_rate_border.center
+
+    hard_rate_text_content = str(calculate_win_rate(*record['hard'])).rjust(4, " ") + "%"
+    # print("easy len:",len(easy_text_content))
+    hard_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4*3+70,50,25))
+    hard_rate_text = rate_font.render(hard_rate_text_content, True, BLACK)
+    hard_rate_text_rect = hard_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    hard_rate_text_rect.center = hard_rate_border.center
 
 
     font = pygame.font.Font('files/font/main_font.ttf', 20)
@@ -1007,6 +1045,10 @@ def info():
         SCREEN.blit(normal_text, normal_text_rect)
         SCREEN.blit(hard_text, hard_text_rect)
         SCREEN.blit(ver_text, ver_text_rect)
+        SCREEN.blit(easy_rate_text, easy_rate_text_rect)
+        SCREEN.blit(normal_rate_text, normal_rate_text_rect)
+        SCREEN.blit(hard_rate_text, hard_rate_text_rect)
+        # pygame.draw.rect(SCREEN, BLACK, (w/3*2+10,h/2/2+70,50,25))
         pygame.display.flip()
 
     
