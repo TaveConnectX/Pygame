@@ -34,7 +34,7 @@ background_sound = (pygame.mixer.Sound('files/sound/bgm.mp3'), 0.3, 0)
 game_sound = (pygame.mixer.Sound('files/sound/game_sound.mp3'),1, 0)
 
 # from https://freesound.org/people/tyops/sounds/562770/
-ee_sound = (pygame.mixer.Sound('files/sound/ee_sound.wav'),1, 0)
+ee_sound = (pygame.mixer.Sound('files/sound/ee_sound.mp3'),1, 0)
 
 # from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
 drop_sound = (pygame.mixer.Sound('files/sound/drop_sound.wav'),1, 1)
