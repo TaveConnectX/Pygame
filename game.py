@@ -285,12 +285,14 @@ def draw_cursor(x, player):
 def draw_circle_with_pos(pos,player):
     w,h = SCREEN.get_size()
     r = (w-100)/7/2/1.05
-    if player in [1,-1]: color = P1COLOR
-    elif player in [2,-2]: color = P2COLOR
+    if abs(player) == 1: color = P1COLOR
+    elif abs(player) == 2: color = P2COLOR
+    # recommend 
     else:
         R1, G1, B1 = P1COLOR
         R2, G2, B2 = P2COLOR
-        color = (255-(R1+R2)//2, 255-(G1+G2)//2, 255-(B1+B2)//2)
+        # color = (255-(R1+R2)//2, 255-(G1+G2)//2, 255-(B1+B2)//2)
+        color = ((255-R1)/3*2+R1,(255-G1)/3*2+G1,(255-B1)/3*2+B1)
     x,y = pos
     x += 0.5
     y += 0.5
@@ -385,6 +387,7 @@ def play(difficulty,cont_game=False):
                          SCREEN.get_width()-97,500,100,50,\
                          font = pygame.font.Font('files/font/monospace_font.ttf', 20)
                          )
+    recommend_button = Button('만약 AI라면...',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (60,475,70,50))
     font = pygame.font.Font('files/font/monospace_font.ttf', 20)
@@ -400,13 +403,14 @@ def play(difficulty,cont_game=False):
 
 
     block_event = False
+    show_recommend = False
     run = True
     event = None
     break_event, break_time = False, 0
     x, y = 50,100
     clicked_x, clicked_y = 0,0
     falling_piece = FallingInfo()
-    
+    coord_recommend = (None, None)
     SCREEN.fill(WHITE)
     for i in range(len(board)):
         for j in range(len(board[0])):
@@ -416,7 +420,9 @@ def play(difficulty,cont_game=False):
     go_back = back_button.draw_and_get_event(SCREEN, event)
     undo_action = undo_button.draw_and_get_event(SCREEN, event)
     SCREEN.blit(text, text_rect)
-    if remained_undo >= 4: SCREEN.blit(practice_text, practice_text_rect)
+    if remained_undo >= 4: 
+        recommend_button.draw_and_get_event(SCREEN, event)
+        SCREEN.blit(practice_text, practice_text_rect)
     draw_table(SCREEN)
     draw_cursor(x,player)
     pygame.display.flip()
@@ -468,9 +474,10 @@ def play(difficulty,cont_game=False):
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
                 x,y = pygame.mouse.get_pos()
-                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
-                if not is_valid_x(SCREEN, x, y, undo_button): continue
+                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button, recommend_button): continue
+                if not is_valid_x(SCREEN, x, y, undo_button, recommend_button): continue
                 
+                coord_recommend = (None, None)
                 col = x2col(SCREEN, x)
                 next_board, player, (drop_row, drop_col), is_valid = get_next_state(board,col,player)
                 block_event = True
@@ -490,6 +497,9 @@ def play(difficulty,cont_game=False):
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         undo_action = undo_button.draw_and_get_event(SCREEN, event)
+        if remained_undo >= 4: 
+            SCREEN.blit(practice_text, practice_text_rect)
+            show_recommend = recommend_button.draw_and_get_event(SCREEN, event)
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             save_continue(continue_boards, player,difficulty, remained_undo)
@@ -500,6 +510,7 @@ def play(difficulty,cont_game=False):
         if undo_action and not block_event and not break_event:
             if remained_undo==0 or len(continue_boards)<=2: pass
             else:
+                coord_recommend = (None, None)
                 remained_undo -= 1
                 break_board = continue_boards[-1] - continue_boards[-3]
                 break_pieces = np.transpose(np.nonzero(break_board))
@@ -515,6 +526,21 @@ def play(difficulty,cont_game=False):
                 i,j= break_pieces[1]
                 broken_circle_info_2 = get_broken_circle_info_with_coord((i,j), break_board[i,j])
                 play_sound(undo_sound)
+
+        if show_recommend and not block_event and not break_event:
+            # play_sound(button_sound, repeat=False, custom_volume=1)
+            if coord_recommend == (None, None):
+                row = 0
+                
+                # ai 추천은 사람의 입장에서 진행 -> player=1
+                col = test_main(board, 1, 'hard')
+                for r in range(5,-1,-1):
+                    if board[r][col] == 0:
+                        row = r
+                        break
+                pos = coord2pos(SCREEN, (row,col))
+                coord_recommend = pos
+                play_sound(recommend_sound, repeat=False, custom_volume=1)
         
         if not falling_piece.stopped():
             falling_piece.calculate_info()
@@ -524,11 +550,14 @@ def play(difficulty,cont_game=False):
                 if board[i][j] != 0:
                     pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
+        if coord_recommend != (None, None):
+            draw_circle_with_pos(coord_recommend,player=3)
+
         draw_table(SCREEN)
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
         SCREEN.blit(text, text_rect)
-        if remained_undo >= 4: SCREEN.blit(practice_text, practice_text_rect)
+        
         clock.tick(frame)
         pygame.display.flip()
 
@@ -904,7 +933,7 @@ def review():
             go_next = False
             coord_recommend = (None, None)
         if show_recommend and (idx+fp)%2 and idx!=len(review_boards)-1:
-            play_sound(button_sound, repeat=False, custom_volume=1)
+            # play_sound(button_sound, repeat=False, custom_volume=1)
             if coord_recommend == (None, None):
                 row = 0
                 
@@ -947,6 +976,8 @@ def review():
                 if review_boards[idx][i][j] != 0:
                     pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
+            
+
         if idx == len(review_boards)-1:
             for coord in last_coords:
                 pos = coord2pos(SCREEN, coord)
@@ -1004,21 +1035,21 @@ def info():
 
     easy_rate_text_content = str(calculate_win_rate(*record['easy'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    easy_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4+70,50,25))
+    easy_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4+72,50,25))
     easy_rate_text = rate_font.render(easy_rate_text_content, True, BLACK)
     easy_rate_text_rect = easy_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     easy_rate_text_rect.center = easy_rate_border.center
 
     normal_rate_text_content = str(calculate_win_rate(*record['normal'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    normal_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/2+70,50,25))
+    normal_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/2+72,50,25))
     normal_rate_text = rate_font.render(normal_rate_text_content, True, BLACK)
     normal_rate_text_rect = normal_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     normal_rate_text_rect.center = normal_rate_border.center
 
     hard_rate_text_content = str(calculate_win_rate(*record['hard'])).rjust(4, " ") + "%"
     # print("easy len:",len(easy_text_content))
-    hard_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4*3+70,50,25))
+    hard_rate_border = pygame.draw.rect(SCREEN, WHITE, (w/3*2+10,h/4*3+72,50,25))
     hard_rate_text = rate_font.render(hard_rate_text_content, True, BLACK)
     hard_rate_text_rect = hard_rate_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     hard_rate_text_rect.center = hard_rate_border.center
@@ -1445,6 +1476,10 @@ def sound_setting():
         draw_table(SCREEN)
         clock.tick(frame)
         pygame.display.flip()
+
+
+def ee():
+    pass
 
 # 이미지 로드
 # pygame.image.load(image_file)
