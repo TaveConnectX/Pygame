@@ -180,35 +180,6 @@ def intro():
     sys.exit()
 
 
-def no_setting():
-    w,h = SCREEN.get_size()
-
-    back_button = Button('back',cx=w/2,cy=h*3/4,width=w/3,height=100)
-
-    border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
-    font = pygame.font.Font('files/font/main_font.ttf', 30)
-    text = font.render("아직 구현이 안됐습니다ㅠ", True, BLACK)
-    text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
-    text_rect.center = border.center
-
-    run = True
-    event = None
-    go_back = False
-    SCREEN.fill(WHITE)
-    while run:
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                SCREEN.fill(WHITE)
-                run = False
-        if go_back: 
-            play_sound(button_sound, repeat=False, custom_volume=1)
-            SCREEN.fill(WHITE)
-            return
-        go_back = back_button.draw_and_get_event(SCREEN, event)
-        SCREEN.blit(text, text_rect)
-        pygame.display.flip()
-
 
 
 
@@ -238,6 +209,7 @@ def select_difficulty():
             hard_action = hard_button.draw_and_get_event(SCREEN,event)
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
         if easy_action:
             play_sound(button_sound, repeat=False, custom_volume=1)
             play(difficulty='easy')
@@ -279,6 +251,7 @@ def no_board_to_continue():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
@@ -505,6 +478,7 @@ def play(difficulty,cont_game=False):
                 save_continue(continue_boards, player,difficulty, remained_undo)
                 game_sound[0].stop()
                 run = False
+                sys.exit()
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         undo_action = undo_button.draw_and_get_event(SCREEN, event)
@@ -587,6 +561,7 @@ def show_connect4(board, player, coords):
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
         
         for i in range(len(board)):
             for j in range(len(board[0])):
@@ -652,6 +627,7 @@ def end(board, player, coords, difficulty, remained_undo):
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
@@ -741,6 +717,7 @@ def how_to():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
         if page==1:
             text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
@@ -860,6 +837,7 @@ def no_board_to_review():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
         if go_back: 
             play_sound(button_sound, repeat=False, custom_volume=1)
             SCREEN.fill(WHITE)
@@ -918,6 +896,7 @@ def review():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
             
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
@@ -1086,6 +1065,7 @@ def info():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back: 
@@ -1145,6 +1125,7 @@ def setting():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         player_action = player_button.draw_and_get_event(SCREEN, event)
@@ -1232,6 +1213,7 @@ def player_setting():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
         
         go_back = back_button.draw_and_get_event(SCREEN, event)
         p1_action = p1_button.draw_and_get_event(SCREEN, event)
@@ -1279,6 +1261,7 @@ def p1_color_setting():
             color = SCREEN.get_at((x,y))
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 r,g,b,_ = color
                 if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
@@ -1336,6 +1319,7 @@ def p2_color_setting():
             color = SCREEN.get_at((x,y))
             if event.type == pygame.QUIT:
                 run = False
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 r,g,b,_ = color
                 if (r,g,b)!=(0,0,0) and (r,g,b)!=(255,255,255) and (r,g,b)!=(180,180,180):
@@ -1420,6 +1404,7 @@ def sound_setting():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
+                sys.exit()
 
         if player==1 and not block_event:
             block_event = True
@@ -1505,7 +1490,7 @@ def ee():
             if event.type == pygame.QUIT:
                 SCREEN.fill(WHITE)
                 run = False
-                return
+                sys.exit()
 
         go_back = back_button.draw_and_get_event(SCREEN, event)
         if go_back:
