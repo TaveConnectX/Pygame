@@ -381,15 +381,22 @@ def play(difficulty,cont_game=False):
         # 이어하기를 위한 보드 초기화
         continue_boards = [copy.deepcopy(board)]
         remained_undo = 3 
-    undo_button = Button('undo {}'.format(str(remained_undo).rjust(2," ")),SCREEN.get_width()-97,500,100,50,\
+    undo_button = Button('undo {}'.format(str(remained_undo).rjust(2," ")),\
+                         SCREEN.get_width()-97,500,100,50,\
                          font = pygame.font.Font('files/font/monospace_font.ttf', 20)
                          )
 
-    border = pygame.draw.rect(SCREEN, WHITE, (50,475,70,50))
-    font = pygame.font.Font('files/font/main_font.ttf', 20)
-    text = font.render(difficulty, True, BLACK)
+    border = pygame.draw.rect(SCREEN, WHITE, (60,475,70,50))
+    font = pygame.font.Font('files/font/monospace_font.ttf', 20)
+    text = font.render(difficulty.ljust(8, " "), True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
+
+    practice_border = pygame.draw.rect(SCREEN, WHITE, (60,500,70,50))
+    # font = pygame.font.Font('files/font/main_font.ttf', 20)
+    practice_text = font.render('practice', True, BLACK)
+    practice_text_rect = practice_text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
+    practice_text_rect.center = practice_border.center
 
 
     block_event = False
@@ -409,6 +416,7 @@ def play(difficulty,cont_game=False):
     go_back = back_button.draw_and_get_event(SCREEN, event)
     undo_action = undo_button.draw_and_get_event(SCREEN, event)
     SCREEN.blit(text, text_rect)
+    if remained_undo >= 4: SCREEN.blit(practice_text, practice_text_rect)
     draw_table(SCREEN)
     draw_cursor(x,player)
     pygame.display.flip()
@@ -520,6 +528,7 @@ def play(difficulty,cont_game=False):
         if player==1: draw_cursor(x,player)
         elif player==2 and block_event: draw_cursor(x, 2//player)
         SCREEN.blit(text, text_rect)
+        if remained_undo >= 4: SCREEN.blit(practice_text, practice_text_rect)
         clock.tick(frame)
         pygame.display.flip()
 
@@ -833,7 +842,7 @@ def review():
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
     recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
-    continue_button = Button('play from here (연습 모드)',w-172,500,250,50, font_size=20)
+    continue_button = Button('play from here (연습 모드)',w-177,500,260,50, font_size=20)
     
     font = pygame.font.Font('files/font/monospace_font.ttf', 30)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
