@@ -33,6 +33,9 @@ background_sound = (pygame.mixer.Sound('files/sound/bgm.mp3'), 0.3, 0)
 # from https://pixabay.com/ko/sound-effects/search/arcade/
 game_sound = (pygame.mixer.Sound('files/sound/game_sound.mp3'),1, 0)
 
+# from https://freesound.org/people/tyops/sounds/562770/
+ee_sound = (pygame.mixer.Sound('files/sound/ee_sound.wav'),1, 0)
+
 # from https://freesound.org/people/MATRIXXX_/sounds/349873/ 
 drop_sound = (pygame.mixer.Sound('files/sound/drop_sound.wav'),1, 1)
 
@@ -62,6 +65,7 @@ undo_sound = (pygame.mixer.Sound('files/sound/undo_sound.mp3'), 0.5, 1)
 # from https://pixabay.com/ko/sound-effects/search/boop/
 
 select_color_sound = (pygame.mixer.Sound('files/sound/select_color_sound.mp3'), 0.7, 1)
+
 
 # from https://pixabay.com/ko/sound-effects/search/xylophone/
 do = (pygame.mixer.Sound('files/sound/xylophone_do.mp3'), 1, 1)
@@ -237,7 +241,79 @@ color_picker = (
 )
 
 
-ee = (
+ee_boards = (
+        # 모
+        (
+            (2,2,2,2,2,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,1,2,1,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,1,2,2,2),
+            (2,2,1,1,1,2,2)
+        ),
+        # 두
+        (
+            (2,2,1,1,1,2,2),
+            (2,2,1,2,2,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,2,2,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,1,2,2,2)
+        ),
+        # 너
+        (
+            (2,2,2,2,2,2,2),
+            (2,2,2,2,2,2,2),
+            (2,2,1,2,2,2,1),
+            (2,2,1,2,2,1,1),
+            (2,2,1,2,2,2,1),
+            (2,2,1,1,1,2,1)
+        ),
+        # 무
+        (
+            (2,2,1,1,1,2,2),
+            (2,2,1,2,1,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,2,2,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,1,2,2,2)
+        ),
+        # 고
+        (
+            (2,2,2,2,2,2,2),
+            (2,2,2,2,2,2,2),
+            (2,2,1,1,1,1,2),
+            (2,2,2,2,2,1,2),
+            (2,2,2,1,2,2,2),
+            (2,2,1,1,1,1,2),
+        ),
+        # 마
+        (
+            (2,2,2,2,2,2,2),
+            (2,2,2,2,2,2,2),
+            (2,1,1,1,2,1,2),
+            (2,1,2,1,2,1,1),
+            (2,1,1,1,2,1,2),
+            (2,2,2,2,2,1,2)
+        ),
+        # 워 
+        (
+            (2,2,1,2,2,2,2),
+            (2,1,2,1,2,2,2),
+            (2,2,1,2,2,2,1),
+            (2,1,1,1,2,2,1),
+            (2,2,1,2,2,1,1),
+            (2,2,1,2,2,2,1)
+        ),
+        # T
+        (
+            (2,2,2,2,2,2,2),
+            (2,2,1,1,1,2,2),
+            (2,2,2,1,2,2,2),
+            (2,2,2,1,2,2,2),
+            (2,2,2,1,2,2,2),
+            (2,2,2,1,2,2,2)
+        ),
         # T
         (
             (2,2,2,2,2,2,2),

@@ -16,7 +16,7 @@ pygame.init()
 
 
 
-ver = 0.5  # version
+ver = 1.0  # version
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
@@ -98,7 +98,7 @@ def intro():
     intro_button_width = w//3
     intro_button_height = h//16
     print(w,h,intro_button_width,intro_button_height)
-
+    
     play_sound(background_sound, repeat=True)
     music_on = True
     setting_button = Button("",w-55,h-55, 70,70)
@@ -123,7 +123,7 @@ def intro():
     setting_rect.x = w-90
     setting_rect.y = h-90
     
-
+    ee_cnt = 0
 
     
     run = True
@@ -158,7 +158,18 @@ def intro():
             play_sound(button_sound, repeat=False, custom_volume=1)
             background_sound[0].set_volume(background_sound[1] * MUSIC_SOUND / 3)
             setting()
+        if ee_cnt==11:
+            ee()
+            ee_cnt=0
         for event in pygame.event.get():
+            # 마우스를 클릭해서 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                clicked_x, clicked_y = pygame.mouse.get_pos()
+                if logo_rect.x <=clicked_x<=logo_rect.x+logo_image.get_width():
+                    if logo_rect.y <= clicked_y <= logo_rect.y+logo_image.get_height():
+                        ee_cnt += 1
+                    else: ee_cnt = 0
+                else: ee_cnt = 0
             if event.type == pygame.QUIT:
                 run = False
         clock.tick(frame)
@@ -1479,7 +1490,49 @@ def sound_setting():
 
 
 def ee():
-    pass
+    back_button = Button('back',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
+    run = True
+    t = 0
+    idx = 0
+    event = None
+    board = ee_boards[idx]
+    bg_volume = background_sound[0].get_volume()
+    background_sound[0].set_volume(0)
+    play_sound(ee_sound, repeat=True)
+    while run:
+        SCREEN.fill(WHITE)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                SCREEN.fill(WHITE)
+                run = False
+                return
+
+        go_back = back_button.draw_and_get_event(SCREEN, event)
+        if go_back:
+            ee_sound[0].stop()
+            play_sound(button_sound, repeat=False, custom_volume=1)
+            background_sound[0].set_volume(bg_volume)
+            SCREEN.fill(WHITE)
+            return
+        
+        t += 1
+        if t%60==0:
+            idx = idx+1 if idx<len(ee_boards)-1 else 0
+            board = ee_boards[idx]
+            t = 0
+
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] != 0:
+                    pos = coord2pos(SCREEN, (i,j))
+                    draw_circle_with_pos(pos, player=board[i][j])
+        draw_table(SCREEN)
+        clock.tick(frame)
+        pygame.display.flip()
+
+
+
+    
 
 # 이미지 로드
 # pygame.image.load(image_file)
