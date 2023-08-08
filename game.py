@@ -29,7 +29,7 @@ P2COLOR = setting['p2_color']
 MUSIC_SOUND = setting['music']
 EFFECT_SOUND = setting['effect']
 
-print(EFFECT_SOUND)
+# print(EFFECT_SOUND)
 # pygame.Rect(x,y,width, height)
 # myRect = pygame.Rect(150, 200, 200, 100)
 
