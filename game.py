@@ -16,7 +16,7 @@ pygame.init()
 
 
 
-ver = "1.0.1"  # version
+ver = "1.0.2"  # version
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
@@ -423,7 +423,10 @@ def play(difficulty,cont_game=False):
         if win_info[0] != 0:
             print("for review")
             game_sound[0].stop()
-            save_review(continue_boards,2//player, difficulty)
+            if win_info[0] == 3:
+                save_review(continue_boards,3, difficulty)
+            else:
+                save_review(continue_boards,2//player, difficulty)
             end(board, win_info[0], win_info[1:], difficulty,remained_undo)
             
             return
@@ -594,9 +597,10 @@ def show_connect4(board, player, coords):
 
 def end(board, player, coords, difficulty, remained_undo):
     save_continue([],None, None, None)
-    show_connect4(board, player, coords)
+    is_draw = False if player in [1,2] else True
+    if not is_draw: show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
-
+    
     record = load_record()
 
     if player == 1: 
@@ -647,9 +651,10 @@ def end(board, player, coords, difficulty, remained_undo):
                     pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
 
-        for i in range(4):
-            pos = coord2pos(SCREEN, coords[i])
-            draw_circle_with_pos(pos, player=-player)
+        if not is_draw:
+            for i in range(4):
+                pos = coord2pos(SCREEN, coords[i])
+                draw_circle_with_pos(pos, player=-player)
         draw_table(SCREEN)
         
 
@@ -860,6 +865,8 @@ def review():
         print("no board to review")
         no_board_to_review()
         return
+    
+    print("player:",player)
     back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
@@ -972,7 +979,7 @@ def review():
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
             
 
-        if idx == len(review_boards)-1:
+        if player in [1,2] and idx == len(review_boards)-1:
             for coord in last_coords:
                 pos = coord2pos(SCREEN, coord)
                 draw_circle_with_pos(pos, player=-player)
