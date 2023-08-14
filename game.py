@@ -16,7 +16,7 @@ pygame.init()
 
 
 
-ver = 1.0  # version
+ver = "1.0.1"  # version
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
