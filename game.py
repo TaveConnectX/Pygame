@@ -16,7 +16,7 @@ pygame.init()
 
 
 
-ver = "1.0.1"  # version
+ver = "1.0.2"  # version
 # Clock 객체 생성
 clock = pygame.time.Clock()
 frame = 60
@@ -237,7 +237,7 @@ def no_board_to_continue():
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.Font('files/font/main_font.ttf', 30)
-    text = font.render("이어할 게임이 없습니다", True, BLACK)
+    text = font.render("No game to continue", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
@@ -371,7 +371,7 @@ def play(difficulty,cont_game=False):
                          SCREEN.get_width()-97,500,100,50,\
                          font = pygame.font.Font('files/font/monospace_font.ttf', 20)
                          )
-    recommend_button = Button('만약 AI라면...',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
+    recommend_button = Button('If I was AI...',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (60,475,70,50))
     font = pygame.font.Font('files/font/monospace_font.ttf', 20)
@@ -423,7 +423,10 @@ def play(difficulty,cont_game=False):
         if win_info[0] != 0:
             print("for review")
             game_sound[0].stop()
-            save_review(continue_boards,2//player, difficulty)
+            if win_info[0] == 3:
+                save_review(continue_boards,3, difficulty)
+            else:
+                save_review(continue_boards,2//player, difficulty)
             end(board, win_info[0], win_info[1:], difficulty,remained_undo)
             
             return
@@ -594,21 +597,22 @@ def show_connect4(board, player, coords):
 
 def end(board, player, coords, difficulty, remained_undo):
     save_continue([],None, None, None)
-    show_connect4(board, player, coords)
+    is_draw = False if player in [1,2] else True
+    if not is_draw: show_connect4(board, player, coords)
     w,h = SCREEN.get_size()
-
+    
     record = load_record()
 
     if player == 1: 
-        text_content = "이겼습니다! 축하드립니다!"
+        text_content = "Congratulation! You win!"
         record[difficulty][0] += 1
         play_sound(win_sound, repeat=False, custom_volume=1)
     elif player == 2: 
-        text_content = "아쉽게도 졌네요 ㅠㅠ"
+        text_content = "Unfortunately, you lose..."
         record[difficulty][2] += 1
         play_sound(fail_sound, repeat=False, custom_volume=1)
     else: 
-        text_content = "비겼습니다! 한번 더하면 이길지도...?"
+        text_content = "You can do better next time!"
         record[difficulty][1] += 1
         play_sound(draw_sound, repeat=False, custom_volume=1)
 
@@ -647,9 +651,10 @@ def end(board, player, coords, difficulty, remained_undo):
                     pos = coord2pos(SCREEN, (i,j))
                     draw_circle_with_pos(pos, player=board[i][j])
 
-        for i in range(4):
-            pos = coord2pos(SCREEN, coords[i])
-            draw_circle_with_pos(pos, player=-player)
+        if not is_draw:
+            for i in range(4):
+                pos = coord2pos(SCREEN, coords[i])
+                draw_circle_with_pos(pos, player=-player)
         draw_table(SCREEN)
         
 
@@ -692,8 +697,9 @@ def how_to():
     term, t, n, dingdong = frame//2, 0, 0, False
     page_3_arr = [(5,1),(4,2),(3,3),(2,4)]
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    page_1_font = pygame.font.Font('files/font/main_font.ttf', 25)
     font = pygame.font.Font('files/font/main_font.ttf', 30)
-    text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+    text = page_1_font.render("Place the stones one after the other", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
@@ -723,7 +729,7 @@ def how_to():
                 run = False
                 sys.exit()
         if page==1:
-            text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+            text = page_1_font.render("Place the stones one after the other", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
             cnt_frame = cnt_frame+1 if cnt_frame<frame//2 else 0
@@ -731,7 +737,7 @@ def how_to():
                 idx = idx+1 if idx<max_idx else 0
             board = boards_page_1[idx]
         elif page==2:
-            text = font.render("돌은 위에서 아래로 떨어집니다", True, BLACK)
+            text = font.render("Stones fall from top to bottom", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
             if player==1 and not block_event:
@@ -747,7 +753,7 @@ def how_to():
                 falling_piece.set_pos((drop_row,drop_col))
                 falling_piece.calculate_info()
         elif page==3:
-            text = font.render("4목을 완성하면 승리!", True, BLACK)
+            text = font.render("4-in-a-row will let you win!", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
 
@@ -827,7 +833,7 @@ def no_board_to_review():
 
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
     font = pygame.font.Font('files/font/main_font.ttf', 30)
-    text = font.render("복기할 게임이 없습니다", True, BLACK)
+    text = font.render("No game to review", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
@@ -860,11 +866,13 @@ def review():
         print("no board to review")
         no_board_to_review()
         return
+    
+    print("player:",player)
     back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
-    continue_button = Button('play from here (연습 모드)',w-177,500,260,50, font_size=20)
+    recommend_button = Button('If I was AI...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    continue_button = Button('play from here (practice)',w-177,500,260,50, font_size=20)
     
     font = pygame.font.Font('files/font/monospace_font.ttf', 30)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
@@ -972,7 +980,7 @@ def review():
                     draw_circle_with_pos(pos, player=review_boards[idx][i][j])
             
 
-        if idx == len(review_boards)-1:
+        if player in [1,2] and idx == len(review_boards)-1:
             for coord in last_coords:
                 pos = coord2pos(SCREEN, coord)
                 draw_circle_with_pos(pos, player=-player)
