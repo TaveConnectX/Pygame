@@ -371,7 +371,7 @@ def play(difficulty,cont_game=False):
                          SCREEN.get_width()-97,500,100,50,\
                          font = pygame.font.Font('files/font/monospace_font.ttf', 20)
                          )
-    recommend_button = Button('만약 AI라면...',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
+    recommend_button = Button('If I was AI...',cx=SCREEN.get_width()/2,cy=SCREEN.get_height()*3/4,width=SCREEN.get_width()/2,height=100)
 
     border = pygame.draw.rect(SCREEN, WHITE, (60,475,70,50))
     font = pygame.font.Font('files/font/monospace_font.ttf', 20)
@@ -692,8 +692,9 @@ def how_to():
     term, t, n, dingdong = frame//2, 0, 0, False
     page_3_arr = [(5,1),(4,2),(3,3),(2,4)]
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
+    page_1_font = pygame.font.Font('files/font/main_font.ttf', 25)
     font = pygame.font.Font('files/font/main_font.ttf', 30)
-    text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+    text = page_1_font.render("Place the stones one after the other", True, BLACK)
     text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
     text_rect.center = border.center
 
@@ -723,7 +724,7 @@ def how_to():
                 run = False
                 sys.exit()
         if page==1:
-            text = font.render("서로 차례대로 돌을 놓습니다", True, BLACK)
+            text = page_1_font.render("Place the stones one after the other", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
             cnt_frame = cnt_frame+1 if cnt_frame<frame//2 else 0
@@ -731,7 +732,7 @@ def how_to():
                 idx = idx+1 if idx<max_idx else 0
             board = boards_page_1[idx]
         elif page==2:
-            text = font.render("돌은 위에서 아래로 떨어집니다", True, BLACK)
+            text = font.render("Stones fall from top to bottom", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
             if player==1 and not block_event:
@@ -747,7 +748,7 @@ def how_to():
                 falling_piece.set_pos((drop_row,drop_col))
                 falling_piece.calculate_info()
         elif page==3:
-            text = font.render("4목을 완성하면 승리!", True, BLACK)
+            text = font.render("4-in-a-row will let you win!", True, BLACK)
             text_rect = text.get_rect(center=(SCREEN.get_width()/2, SCREEN.get_height()/2))
             text_rect.center = border.center
 
@@ -863,8 +864,8 @@ def review():
     back_button = Button('<',25,25,50,50)
     previous_button = Button('<<',cx=w/4,cy=h*3/4,width=w/2,height=100)
     next_button = Button('>>',cx=w/4*3,cy=h*3/4,width=w/2,height=100)
-    recommend_button = Button('만약 AI라면...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
-    continue_button = Button('play from here (연습 모드)',w-177,500,260,50, font_size=20)
+    recommend_button = Button('If I was AI...',cx=w/2,cy=h*3/4+100,width=w/2,height=100)
+    continue_button = Button('play from here (practice)',w-177,500,260,50, font_size=20)
     
     font = pygame.font.Font('files/font/monospace_font.ttf', 30)
     border = pygame.draw.rect(SCREEN, WHITE, (0,h/1.75,w,100))
