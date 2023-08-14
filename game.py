@@ -458,8 +458,12 @@ def play(difficulty,cont_game=False):
             if event.type == pygame.MOUSEBUTTONUP:
                 print(clicked_x)
                 x,y = pygame.mouse.get_pos()
-                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button, recommend_button): continue
-                if not is_valid_x(SCREEN, x, y, undo_button, recommend_button): continue
+                if not is_valid_x(SCREEN, clicked_x, clicked_y, undo_button): continue
+                if not is_valid_x(SCREEN, x, y, undo_button): continue
+                if remained_undo>=4:
+                    if not is_valid_x(SCREEN, clicked_x, clicked_y, recommend_button): continue
+                    if not is_valid_x(SCREEN, x, y, recommend_button): continue
+
                 
                 coord_recommend = (None, None)
                 col = x2col(SCREEN, x)
